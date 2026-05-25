@@ -1,0 +1,18 @@
+{
+  "trace_id": "bad_citation",
+  "input": "How many filings did the January plan add?",
+  "output": "The January plan raised the filing count to 42 [C1].",
+  "citations": [
+    {
+      "id": "C1",
+      "source": "planning_notes.md",
+      "span": "The January plan kept the filing count at 24."
+    }
+  ],
+  "expected_behavior": {
+    "required_text": ["[C1]"],
+    "citation_spans": ["raised the filing count to 42"]
+  },
+  "failure_tags": ["bad_citation"]
+}
+

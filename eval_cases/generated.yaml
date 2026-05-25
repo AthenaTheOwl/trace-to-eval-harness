@@ -1,0 +1,18 @@
+cases:
+- id: bad_citation_regression
+  suite: citation_integrity
+  source_trace_id: bad_citation
+  trace_id: bad_citation
+  trace_file: bad_citation.json
+  input: How many filings did the January plan add?
+  failure_tags:
+  - bad_citation
+  human_review:
+    status: TODO
+    reviewer: TODO
+    notes: 'TODO: confirm expected behavior before this case gates a release.'
+  checks:
+  - type: contains_required_text
+    value: '[C1]'
+  - type: citation_span_present
+    value: raised the filing count to 42
