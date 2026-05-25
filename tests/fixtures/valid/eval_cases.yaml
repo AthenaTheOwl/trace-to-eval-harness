@@ -1,0 +1,18 @@
+cases:
+  - id: valid_trace_regression
+    suite: tool_policy
+    trace_id: valid_trace
+    trace_file: trace.json
+    input: "Check whether the draft report exists."
+    failure_tags:
+      - tool_policy
+    human_review:
+      status: TODO
+      reviewer: TODO
+      notes: Confirmed from fixture.
+    checks:
+      - type: contains_required_text
+        value: "draft report"
+      - type: tool_call_allowed
+        allowed_tools:
+          - read_file

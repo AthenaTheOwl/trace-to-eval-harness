@@ -18,6 +18,7 @@ jobs:
       - run: python scripts/voice_lint.py
       - run: python scripts/check_no_bom.py
       - run: python scripts/spec_check.py
+      - run: python scripts/validate_schemas.py
       - run: python scripts/validate_decisions.py
       - run: python scripts/validate_roles.py
       - run: python scripts/validate_tools.py

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trace-to-eval.dev/schemas/v1/trace.schema.json",
+  "title": "Trace",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["trace_id", "input", "output"],
+  "additionalProperties": true,
+  "properties": {
+    "trace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input": true,
+    "output": {
+      "type": "string"
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          { "type": "string" },
+          { "type": "object", "additionalProperties": true }
+        ]
+      }
+    },
+    "spans": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          { "type": "string" },
+          { "type": "object", "additionalProperties": true }
+        ]
+      }
+    },
+    "tool_calls": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          { "type": "string" },
+          { "type": "object", "additionalProperties": true }
+        ]
+      }
+    },
+    "expected_behavior": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "required_text": { "$ref": "#/$defs/string_or_strings" },
+        "forbidden_text": { "$ref": "#/$defs/string_or_strings" },
+        "citation_spans": { "$ref": "#/$defs/string_or_strings" },
+        "allowed_tools": { "$ref": "#/$defs/string_or_strings" },
+        "refusal_required": { "type": "boolean" }
+      }
+    },
+    "failure_tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "bad_citation",
+          "citation",
+          "missing_citation_span",
+          "unsafe_tool",
+          "tool_policy",
+          "tool",
+          "missing_refusal",
+          "refusal"
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "string_or_strings": {
+      "anyOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      ]
+    }
+  }
+}

@@ -20,3 +20,18 @@ The runner must write JSON and Markdown reports with case, suite, and check coun
 
 The repo must run tests, voice lint, and spec checks locally and in GitHub Actions.
 
+### R-TTE-SCHEMA-001: Published schemas
+
+The repo must publish JSON Schemas for trace, eval case, and run report shapes under `schemas/`.
+
+### R-TTE-SCHEMA-002: Validate command
+
+The CLI must expose `trace-to-eval validate` for trace, eval, and report inputs with clear pass and fail output.
+
+### R-TTE-SCHEMA-003: Schema versions and fixtures
+
+Each published schema must carry `$id` and `version`, and the repo must include positive and negative fixtures for trace, eval, and report validation.
+
+### R-TTE-SCHEMA-004: Deterministic first gate
+
+Schema validation and deterministic checks must stay as the first gate before any later LLM judge integration.

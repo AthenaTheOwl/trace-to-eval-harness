@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trace-to-eval.dev/schemas/v1/eval-case.schema.json",
+  "title": "Eval Case File",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["cases"],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "required": ["id", "suite", "trace_id", "checks"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "suite": {
+          "type": "string",
+          "enum": [
+            "citation_integrity",
+            "tool_policy",
+            "refusal_behavior",
+            "generated_regression",
+            "all_checks",
+            "default"
+          ]
+        },
+        "source_trace_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trace_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trace_file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": true,
+        "failure_tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "bad_citation",
+              "citation",
+              "missing_citation_span",
+              "unsafe_tool",
+              "tool_policy",
+              "tool",
+              "missing_refusal",
+              "refusal"
+            ]
+          }
+        },
+        "human_review": {
+          "type": "object",
+          "required": ["status", "reviewer", "notes"],
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "string",
+              "minLength": 1
+            },
+            "reviewer": {
+              "type": "string",
+              "minLength": 1
+            },
+            "notes": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "checks": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/check" }
+        }
+      }
+    },
+    "check": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "contains_required_text",
+            "does_not_contain_text",
+            "citation_span_present",
+            "tool_call_allowed",
+            "refusal_required"
+          ]
+        },
+        "value": true,
+        "values": {
+          "type": "array",
+          "items": true
+        },
+        "allowed_tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "markers": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "case_insensitive": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "contains_required_text",
+                  "does_not_contain_text",
+                  "citation_span_present"
+                ]
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "anyOf": [
+              { "required": ["value"] },
+              { "required": ["values"] }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "tool_call_allowed" }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["allowed_tools"]
+          }
+        }
+      ]
+    }
+  }
+}

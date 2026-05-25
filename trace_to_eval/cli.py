@@ -2,15 +2,17 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import sys
 
 from .ingest import ingest_trace
 from .report import write_reports
 from .runner import run_eval_file
+from .validation import schema_kinds, validate_document
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="trace_to_eval",
+        prog="trace-to-eval",
         description="Build eval cases from traces and run deterministic checks.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -27,6 +29,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--fail-on-failure",
         action="store_true",
         help="exit 1 when any case fails",
+    )
+
+    validate = subparsers.add_parser("validate", help="validate files against published schemas")
+    validate.add_argument("kind", choices=schema_kinds())
+    validate.add_argument("paths", type=Path, nargs="+")
+    validate.add_argument(
+        "--schema-dir",
+        type=Path,
+        default=None,
+        help="override the schema directory for testing or local schema drafts",
     )
     return parser
 
@@ -53,6 +65,23 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         return 0
 
+    if args.command == "validate":
+        failed = False
+        for path in args.paths:
+            try:
+                result = validate_document(args.kind, path, schema_dir=args.schema_dir)
+            except Exception as exc:
+                print(f"invalid: {path}: {exc}", file=sys.stderr)
+                failed = True
+                continue
+            if result.passed:
+                print(f"valid: {path} matches {result.schema_id}")
+                continue
+            failed = True
+            print(f"invalid: {path} does not match {result.schema_id}", file=sys.stderr)
+            for issue in result.issues:
+                print(f"  - {issue.location}: {issue.message}", file=sys.stderr)
+        return 1 if failed else 0
+
     parser.error("unknown command")
     return 2
-

@@ -1,0 +1,7 @@
+cases:
+  - id: invalid_case
+    suite: citation_integrity
+    trace_id: invalid_trace
+    checks:
+      - type: fuzzy_judge
+        value: "not part of the deterministic gate"

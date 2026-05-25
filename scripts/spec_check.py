@@ -11,9 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SPEC_ROOT = ROOT / "specs" / "0001-trace-to-eval-harness"
 DECISIONS_ROOT = ROOT / "decisions"
 
-REQ_RE = re.compile(r"^###\s+(R-TTE-\d{3}):", re.M)
-OWNER_RE = re.compile(r"\|\s*(R-TTE-\d{3})\s*\|[^|]*owner_role:\s*([a-z][a-z0-9_]*\.[a-z][a-z0-9_-]*)", re.I)
-ID_RE = re.compile(r"\bR-TTE-\d{3}\b")
+REQ_RE = re.compile(r"^###\s+((?:R-TTE-SCHEMA|R-TTE)-\d{3}):", re.M)
+OWNER_RE = re.compile(r"\|\s*((?:R-TTE-SCHEMA|R-TTE)-\d{3})\s*\|[^|]*owner_role:\s*([a-z][a-z0-9_]*\.[a-z][a-z0-9_-]*)", re.I)
+ID_RE = re.compile(r"\b(?:R-TTE-SCHEMA|R-TTE)-\d{3}\b")
 
 
 def main() -> int:
@@ -30,9 +30,14 @@ def main() -> int:
     req_text = req_path.read_text(encoding="utf-8")
     trace_text = trace_path.read_text(encoding="utf-8")
     req_ids = set(REQ_RE.findall(req_text))
-    expected = {f"R-TTE-{index:03d}" for index in range(1, 6)}
+    expected = {f"R-TTE-{index:03d}" for index in range(1, 6)} | {
+        f"R-TTE-SCHEMA-{index:03d}" for index in range(1, 5)
+    }
     if req_ids != expected:
-        violations.append(f"requirements must define R-TTE-001..005; found {sorted(req_ids)}")
+        violations.append(
+            "requirements must define R-TTE-001..005 and "
+            f"R-TTE-SCHEMA-001..004; found {sorted(req_ids)}"
+        )
 
     trace_ids = set(ID_RE.findall(trace_text))
     missing_trace = sorted(req_ids - trace_ids)
@@ -56,7 +61,7 @@ def main() -> int:
 
     if violations:
         return report(violations)
-    print("spec_check OK (5 requirements, owner roles, DEC coverage)")
+    print("spec_check OK (9 requirements, owner roles, DEC coverage)")
     return 0
 
 
@@ -69,4 +74,3 @@ def report(violations: list[str]) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

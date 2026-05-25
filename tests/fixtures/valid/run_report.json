@@ -1,0 +1,47 @@
+{
+  "cases": [
+    {
+      "checks": [
+        {
+          "expected": null,
+          "message": "all required text found",
+          "observed": null,
+          "passed": true,
+          "type": "contains_required_text"
+        },
+        {
+          "expected": {
+            "allowed_tools": [
+              "read_file"
+            ]
+          },
+          "message": "tool calls allowed",
+          "observed": [
+            "read_file"
+          ],
+          "passed": true,
+          "type": "tool_call_allowed"
+        }
+      ],
+      "id": "valid_trace_regression",
+      "passed": true,
+      "suite": "tool_policy",
+      "trace_id": "valid_trace"
+    }
+  ],
+  "summary": {
+    "failed_cases": 0,
+    "failed_checks": 0,
+    "passed_cases": 1,
+    "passed_checks": 2,
+    "suites": {
+      "tool_policy": {
+        "cases": 1,
+        "failed_cases": 0,
+        "passed_cases": 1
+      }
+    },
+    "total_cases": 1,
+    "total_checks": 2
+  }
+}

@@ -16,6 +16,8 @@ Trace-To-Eval Harness turns a failed AI trace into a checked-in eval case. You f
 ```powershell
 python -m pip install -e .[dev]
 python -m trace_to_eval ingest examples/traces/bad_citation.json --out eval_cases/generated.yaml
+python -m trace_to_eval validate trace examples/traces/bad_citation.json
+python -m trace_to_eval validate eval examples/eval_cases.yaml
 python -m trace_to_eval run examples/eval_cases.yaml --traces examples/traces --out reports/run.json
 ```
 
@@ -42,6 +44,9 @@ Required fields: `trace_id`, `input`, `output`.
 
 Optional fields: `citations`, `spans`, `tool_calls`, `expected_behavior`, `failure_tags`.
 
+The published schema is `schemas/trace.schema.json` with id
+`https://trace-to-eval.dev/schemas/v1/trace.schema.json`.
+
 ## Eval Case Shape
 
 ```yaml
@@ -55,12 +60,28 @@ cases:
         value: "raised the filing count to 42"
 ```
 
+The published schema is `schemas/eval-case.schema.json` with id
+`https://trace-to-eval.dev/schemas/v1/eval-case.schema.json`.
+
+## Run Report Shape
+
+The run command writes JSON matching `schemas/run-report.schema.json`
+with id `https://trace-to-eval.dev/schemas/v1/run-report.schema.json`.
+
+Validate any checked-in report with:
+
+```powershell
+python -m trace_to_eval validate report reports/run.json
+```
+
 ## Local Gates
 
 ```powershell
 python -m pytest
 python scripts/voice_lint.py
+python scripts/check_no_bom.py
 python scripts/spec_check.py
+python scripts/validate_schemas.py
 python scripts/validate_decisions.py
 python scripts/validate_roles.py
 python scripts/validate_tools.py
@@ -89,4 +110,3 @@ each. Local artifacts:
 ## License
 
 MIT. See [LICENSE](LICENSE).
-

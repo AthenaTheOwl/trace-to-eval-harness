@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trace-to-eval.dev/schemas/v1/run-report.schema.json",
+  "title": "Run Report",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["summary", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "summary": {
+      "type": "object",
+      "required": [
+        "total_cases",
+        "passed_cases",
+        "failed_cases",
+        "total_checks",
+        "passed_checks",
+        "failed_checks",
+        "suites"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "total_cases": { "$ref": "#/$defs/non_negative_integer" },
+        "passed_cases": { "$ref": "#/$defs/non_negative_integer" },
+        "failed_cases": { "$ref": "#/$defs/non_negative_integer" },
+        "total_checks": { "$ref": "#/$defs/non_negative_integer" },
+        "passed_checks": { "$ref": "#/$defs/non_negative_integer" },
+        "failed_checks": { "$ref": "#/$defs/non_negative_integer" },
+        "suites": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/suite_summary" }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/case_result" }
+    }
+  },
+  "$defs": {
+    "non_negative_integer": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "suite_summary": {
+      "type": "object",
+      "required": ["cases", "passed_cases", "failed_cases"],
+      "additionalProperties": false,
+      "properties": {
+        "cases": { "$ref": "#/$defs/non_negative_integer" },
+        "passed_cases": { "$ref": "#/$defs/non_negative_integer" },
+        "failed_cases": { "$ref": "#/$defs/non_negative_integer" }
+      }
+    },
+    "case_result": {
+      "type": "object",
+      "required": ["id", "suite", "trace_id", "passed", "checks"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "suite": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trace_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "checks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/check_result" }
+        }
+      }
+    },
+    "check_result": {
+      "type": "object",
+      "required": ["type", "passed", "message", "expected", "observed"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "contains_required_text",
+            "does_not_contain_text",
+            "citation_span_present",
+            "tool_call_allowed",
+            "refusal_required"
+          ]
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected": true,
+        "observed": true
+      }
+    }
+  }
+}
