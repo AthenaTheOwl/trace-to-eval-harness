@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://athena.dev/ops/schemas/policy.schema.json",
+  "title": "Policy",
+  "description": "A declarative permission rule the policy engine evaluates against a request. Policies are sorted by priority (higher wins) and the first matching policy decides. The recommended baseline is a default-deny policy at priority 0; all permits are explicit rules at higher priority. Structure is OPA-shaped but expressed as data so the engine can be a small Python evaluator rather than a daemon.",
+  "type": "object",
+  "required": [
+    "id",
+    "applies_to",
+    "decision",
+    "conditions",
+    "priority"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Policy identifier in kebab-case. Example: agent-tool-permissions-default-deny."
+    },
+    "applies_to": {
+      "type": "object",
+      "required": ["roles", "tools", "actions"],
+      "additionalProperties": false,
+      "description": "Scope filter. Each list either enumerates ids or contains the single wildcard string '*'.",
+      "properties": {
+        "roles": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Role ids in scope, or ['*'] for all roles."
+        },
+        "tools": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Tool ids in scope, or ['*'] for all tools."
+        },
+        "actions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Action names in scope (free-form, often matching forbidden_actions vocabulary), or ['*'] for all actions."
+        }
+      }
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["allow", "deny", "require_approval"],
+      "description": "Outcome when the policy matches. require_approval routes the request to the approval queue rather than allowing or denying outright."
+    },
+    "conditions": {
+      "type": "array",
+      "description": "Additional predicates that all must hold for the policy to match. Empty array means the applies_to filter is sufficient.",
+      "items": {
+        "type": "object",
+        "required": ["field", "op", "value"],
+        "additionalProperties": false,
+        "properties": {
+          "field": {"type": "string", "description": "Dotted path into the request context. Example: request.path or actor.guild."},
+          "op": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "ne",
+              "in",
+              "not_in",
+              "matches",
+              "not_matches",
+              "startswith",
+              "not_startswith"
+            ],
+            "description": "Comparison operator. matches and not_matches take a regex value."
+          },
+          "value": {"description": "Right-hand side. Type depends on op."}
+        }
+      }
+    },
+    "priority": {
+      "type": "integer",
+      "description": "Evaluation priority. Higher wins. The recommended default-deny policy sits at 0; explicit allow rules sit above it."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable summary of what the policy does."
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Why this policy exists, ideally pointing at a decision memo."
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp after which the policy stops matching. Use for temporary exemptions."
+    },
+    "owner": {
+      "type": "string",
+      "description": "Person or guild accountable for the policy."
+    }
+  }
+}

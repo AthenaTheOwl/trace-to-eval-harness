@@ -1,0 +1,33 @@
+# .agents/workflows/weekly-dream.yaml
+
+id: weekly-dream
+version: 0.1.0
+owner_guild: learning
+description: |
+  Weekly offline-cognition pass. Every candidate carries
+  human_review_required: true; no CI job auto-applies a candidate.
+
+trigger:
+  - schedule: "Friday 22:00 UTC"
+  - manual: operator-initiated
+
+steps:
+  - id: pull_history
+    role: learning.dream-orchestrator
+    output_type: log
+  - id: run_modes
+    role: learning.dream-orchestrator
+    output_type: dream_report
+  - id: write_report
+    role: learning.dream-orchestrator
+    output_type: dream_report
+  - id: human_review
+    role: control.coordinator
+    output_type: review
+
+post_conditions:
+  - rule: no_auto_apply
+    description: |
+      The dream-candidates-require-human-approval policy blocks any
+      automated path that would apply a candidate without explicit
+      human review.

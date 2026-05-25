@@ -1,0 +1,10 @@
+# Gates the engineering.implementation run must pass before completion. Mirrors
+# the required_gates field in role.yaml.
+
+required_gates:
+  - id: tests
+    script: python -m pytest
+    blocking: true
+  - id: spec_check
+    script: scripts/spec_check.py
+    blocking: true

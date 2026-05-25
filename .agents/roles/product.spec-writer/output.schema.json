@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trace-to-eval-harness.local/roles/product.spec-writer/output.schema.json",
+  "title": "product_spec_writerOutput",
+  "description": "Output schema for the product.spec-writer role.",
+  "type": "object",
+  "required": [
+    "role",
+    "status"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "role": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "done",
+        "blocked"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+# Tool subset this role may invoke. Cross-checked against
+# .agents/tools.yaml. All entries here also appear in role.yaml's
+# allowed_tools list.
+
+allowed_tools:
+  - repo.read
+  - repo.apply_patch
+  - tests.run
+  - gates.run_voice_lint
+  - gates.run_spec_check

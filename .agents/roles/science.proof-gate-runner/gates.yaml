@@ -1,0 +1,13 @@
+# Gates the science.proof-gate-runner run must pass before completion. Mirrors
+# the required_gates field in role.yaml.
+
+required_gates:
+  - id: voice_lint
+    script: scripts/voice_lint.py
+    blocking: true
+  - id: spec_check
+    script: scripts/spec_check.py
+    blocking: true
+  - id: validate_decisions
+    script: scripts/validate_decisions.py
+    blocking: true

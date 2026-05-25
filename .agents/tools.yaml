@@ -1,0 +1,185 @@
+# Tool registry for trace-to-eval-harness.
+#
+# Each entry matches the cross-repo tool.schema.json contract from
+# https://raw.githubusercontent.com/AthenaTheOwl/athena-site/main/ops/schemas/tool.schema.json
+#
+# Roles in .agents/roles/<id>/role.yaml reference these tool ids via
+# their allowed_tools field. The policy engine cross-checks the two
+# sides.
+
+tools:
+  - id: repo.read
+    description: Read repository files. The harness enforces the read scope.
+    risk_level: low
+    allowed_roles:
+      - control.coordinator
+      - product.spec-writer
+      - engineering.implementation
+      - engineering.code-reviewer
+      - science.proof-gate-runner
+      - learning.dream-orchestrator
+    requires_approval: false
+    forbidden_paths:
+      - .env
+      - secrets/**
+    emits_events:
+      - tool.repo.read
+    output_schema: https://athena.dev/ops/schemas/artifact.schema.json
+    category: repo
+    network_required: false
+
+  - id: repo.apply_patch
+    description: Apply a code patch to the repository. Edits existing files in preference to creating new ones.
+    risk_level: high
+    allowed_roles:
+      - product.spec-writer
+      - engineering.implementation
+    requires_approval: false
+    forbidden_paths:
+      - .env
+      - secrets/**
+      - ops/schemas-cache/**
+    emits_events:
+      - tool.repo.apply_patch
+      - tool.repo.write
+    output_schema: https://athena.dev/ops/schemas/artifact.schema.json
+    category: repo
+    network_required: false
+
+  - id: tests.run
+    description: Invoke pytest with the repo's configured suite.
+    risk_level: low
+    allowed_roles:
+      - control.coordinator
+      - engineering.implementation
+      - engineering.code-reviewer
+      - science.proof-gate-runner
+    requires_approval: false
+    forbidden_paths: []
+    emits_events:
+      - tool.tests.run
+    output_schema: https://athena.dev/ops/schemas/artifact.schema.json
+    category: eval
+    network_required: false
+
+  - id: gates.run_voice_lint
+    description: Run scripts/voice_lint.py against the governance markdown globs.
+    risk_level: low
+    allowed_roles:
+      - control.coordinator
+      - product.spec-writer
+      - engineering.implementation
+      - engineering.code-reviewer
+      - science.proof-gate-runner
+      - learning.dream-orchestrator
+    requires_approval: false
+    forbidden_paths: []
+    emits_events:
+      - tool.gates.run_voice_lint
+    output_schema: https://athena.dev/ops/schemas/artifact.schema.json
+    category: eval
+    network_required: false
+
+  - id: gates.run_spec_check
+    description: Run scripts/spec_check.py to confirm R-* requirements trace to DEC files.
+    risk_level: low
+    allowed_roles:
+      - control.coordinator
+      - product.spec-writer
+      - engineering.implementation
+      - engineering.code-reviewer
+      - science.proof-gate-runner
+    requires_approval: false
+    forbidden_paths: []
+    emits_events:
+      - tool.gates.run_spec_check
+    output_schema: https://athena.dev/ops/schemas/artifact.schema.json
+    category: eval
+    network_required: false
+
+  - id: gates.run_validate_decisions
+    description: Run scripts/validate_decisions.py against decisions/DEC-*.md.
+    risk_level: low
+    allowed_roles:
+      - control.coordinator
+      - engineering.code-reviewer
+      - science.proof-gate-runner
+    requires_approval: false
+    forbidden_paths: []
+    emits_events:
+      - tool.gates.run_validate_decisions
+    output_schema: https://athena.dev/ops/schemas/artifact.schema.json
+    category: eval
+    network_required: false
+
+  - id: gates.run_validate_roles
+    description: Run scripts/validate_roles.py against .agents/roles/*/role.yaml.
+    risk_level: low
+    allowed_roles:
+      - control.coordinator
+      - science.proof-gate-runner
+    requires_approval: false
+    forbidden_paths: []
+    emits_events:
+      - tool.gates.run_validate_roles
+    output_schema: https://athena.dev/ops/schemas/artifact.schema.json
+    category: eval
+    network_required: false
+
+  - id: gates.run_validate_tools
+    description: Run scripts/validate_tools.py against .agents/tools.yaml.
+    risk_level: low
+    allowed_roles:
+      - control.coordinator
+      - science.proof-gate-runner
+    requires_approval: false
+    forbidden_paths: []
+    emits_events:
+      - tool.gates.run_validate_tools
+    output_schema: https://athena.dev/ops/schemas/artifact.schema.json
+    category: eval
+    network_required: false
+
+  - id: gates.run_validate_policies
+    description: Run scripts/validate_policies.py against .agents/policies/*.yaml.
+    risk_level: low
+    allowed_roles:
+      - control.coordinator
+      - science.proof-gate-runner
+    requires_approval: false
+    forbidden_paths: []
+    emits_events:
+      - tool.gates.run_validate_policies
+    output_schema: https://athena.dev/ops/schemas/artifact.schema.json
+    category: eval
+    network_required: false
+
+  - id: dream.read_recent_commits
+    description: Read recent commit history, eval reports, and postmortems for the weekly dream pass.
+    risk_level: low
+    allowed_roles:
+      - learning.dream-orchestrator
+    requires_approval: false
+    forbidden_paths:
+      - .env
+      - secrets/**
+    emits_events:
+      - tool.dream.read_recent_commits
+    output_schema: https://athena.dev/ops/schemas/artifact.schema.json
+    category: memory
+    network_required: false
+
+  - id: dream.write_candidate
+    description: Write a dream candidate under dreams/YYYY-WNN/candidates/.
+    risk_level: medium
+    allowed_roles:
+      - learning.dream-orchestrator
+    requires_approval: false
+    forbidden_paths:
+      - .env
+      - secrets/**
+    emits_events:
+      - tool.dream.write_candidate
+    output_schema: https://athena.dev/ops/schemas/artifact.schema.json
+    category: memory
+    network_required: false

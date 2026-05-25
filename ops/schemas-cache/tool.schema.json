@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://athena.dev/ops/schemas/tool.schema.json",
+  "title": "Tool",
+  "description": "A tool registry entry. Tools are the leaf actions a role may invoke. Each entry names the risk level, who may call it, whether approval is required, which paths are off-limits, which events fire on call, and the shape of the result.",
+  "type": "object",
+  "required": [
+    "id",
+    "description",
+    "risk_level",
+    "allowed_roles",
+    "requires_approval",
+    "forbidden_paths",
+    "emits_events",
+    "output_schema"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_-]*$",
+      "description": "Namespaced tool identifier. Format: <category>.<action-slug>. Example: repo.apply_patch, tests.run, deploy.production."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-line description of what the tool does."
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Blast radius if the tool misfires. Critical tools should require approval and narrow allowed_roles."
+    },
+    "allowed_roles": {
+      "type": "array",
+      "description": "Role ids permitted to call this tool. The policy engine cross-checks against the role's allowed_tools list.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_-]*$"
+      }
+    },
+    "requires_approval": {
+      "type": "boolean",
+      "description": "If true, the harness must collect a human (or higher-privileged role) approval before invoking the tool."
+    },
+    "forbidden_paths": {
+      "type": "array",
+      "description": "Glob patterns the tool must never read, write, or otherwise touch. Used by the harness as a final guard.",
+      "items": {"type": "string"}
+    },
+    "emits_events": {
+      "type": "array",
+      "description": "Event type names (matching the type field in event.schema.json) that fire when the tool runs.",
+      "items": {"type": "string"}
+    },
+    "output_schema": {
+      "type": "string",
+      "description": "Reference to the schema describing the tool's result. Either an artifact schema URL (https://athena.dev/ops/schemas/artifact.schema.json) or a sibling result schema URL."
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "repo",
+        "filesystem",
+        "shell",
+        "browser",
+        "database",
+        "deployment",
+        "observability",
+        "issue_tracker",
+        "comms",
+        "llm",
+        "eval",
+        "security",
+        "memory",
+        "skill"
+      ],
+      "description": "Coarse category for routing and dashboards."
+    },
+    "rate_limit": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Throughput cap enforced by the harness.",
+      "properties": {
+        "calls_per_minute": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum invocations per minute across all callers."
+        },
+        "calls_per_hour": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum invocations per hour across all callers."
+        }
+      }
+    },
+    "network_required": {
+      "type": "boolean",
+      "description": "Whether the tool requires outbound network access. Sandboxes without network must reject the tool."
+    }
+  }
+}

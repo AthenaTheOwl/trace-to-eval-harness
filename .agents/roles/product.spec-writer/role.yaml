@@ -1,0 +1,46 @@
+id: product.spec-writer
+guild: product
+mission: Write the spec ledger for a new change, defining R-TTE-* requirements with one DEC per ID before any package code lands.
+inputs:
+  - name: change_request
+    kind: signal
+    required: true
+  - name: routing_decision
+    kind: artifact
+    required: true
+outputs:
+  - name: spec_ledger
+    kind: spec
+    artifact_type: spec
+    required: true
+  - name: traceability_table
+    kind: artifact
+    artifact_type: spec
+    required: true
+allowed_tools:
+  - repo.read
+  - repo.apply_patch
+  - gates.run_voice_lint
+  - gates.run_spec_check
+forbidden_actions:
+  - modify_code
+  - modify_prompts
+  - approve_own_work
+  - deploy_to_production
+required_gates:
+  - voice_lint
+  - spec_check
+escalation:
+  - condition: requirement_scope_unclear
+    escalate_to: control.coordinator
+  - condition: existing_decision_conflict
+    escalate_to: engineering.code-reviewer
+permissions:
+  read_repo: true
+  write_code: false
+  run_tests: false
+  approve: false
+  deploy: false
+  promote_memory: false
+runtime_hint: claude_code
+examples_dir: .agents/roles/product.spec-writer/examples

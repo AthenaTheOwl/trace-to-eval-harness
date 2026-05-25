@@ -1,0 +1,14 @@
+# spec-check allowlist for deferred decision backfills.
+#
+# Every R-* requirement defined in specs/NNNN-*/requirements.md must
+# carry at least one decisions/DEC-*.md file. R-* IDs listed below
+# under `deferred:` are deferred backfills: the requirements shipped
+# before the matching DEC file landed; the DEC lands in a later pass.
+
+deferred:
+  # No deferred entries. All five R-TTE-* requirements carry a paired
+  # DEC under decisions/.
+
+roles_deferred:
+  # No roles deferred. The owner_role tokens in traceability.md map
+  # to roles installed under .agents/roles/.

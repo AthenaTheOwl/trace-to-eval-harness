@@ -1,0 +1,7 @@
+# Gates the learning.dream-orchestrator run must pass before completion. Mirrors
+# the required_gates field in role.yaml.
+
+required_gates:
+  - id: voice_lint
+    script: scripts/voice_lint.py
+    blocking: true

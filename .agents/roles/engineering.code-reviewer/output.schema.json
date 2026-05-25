@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trace-to-eval-harness.local/roles/engineering.code-reviewer/output.schema.json",
+  "title": "engineering_code_reviewerOutput",
+  "description": "Output schema for the engineering.code-reviewer role.",
+  "type": "object",
+  "required": [
+    "role",
+    "status"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "role": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "done",
+        "blocked"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://athena.dev/ops/schemas/role.schema.json",
+  "title": "Role",
+  "description": "A role contract: a controlled job function with declared inputs, outputs, allowed tools, forbidden actions, required gates, escalation paths, and permission flags. Roles are the unit of accountability; a workflow step always pins to exactly one role.",
+  "type": "object",
+  "required": [
+    "id",
+    "guild",
+    "mission",
+    "inputs",
+    "outputs",
+    "allowed_tools",
+    "forbidden_actions",
+    "required_gates",
+    "escalation",
+    "permissions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_-]*$",
+      "description": "Namespaced role identifier in kebab/snake case. Format: <guild>.<role-slug>. Example: engineering.implementation."
+    },
+    "guild": {
+      "type": "string",
+      "enum": [
+        "control",
+        "product",
+        "research",
+        "design",
+        "engineering",
+        "science",
+        "security",
+        "operations",
+        "domain",
+        "learning",
+        "documentation",
+        "commercial"
+      ],
+      "description": "Owning guild. One of the twelve guilds named in ops/control-plane.md. The commercial guild is reserved for revenue-adjacent roles (pricing, packaging, subscriber experience) that don't fit product or design cleanly."
+    },
+    "mission": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Single-sentence statement of what this role exists to do."
+    },
+    "inputs": {
+      "type": "array",
+      "description": "Input contracts the role consumes. Order is informational only.",
+      "items": {
+        "type": "object",
+        "required": ["name", "kind", "required"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string", "description": "Short label for the input."},
+          "kind": {
+            "type": "string",
+            "enum": ["spec", "artifact", "signal", "context"],
+            "description": "Input category."
+          },
+          "required": {"type": "boolean", "description": "Whether the role refuses to start without this input."}
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "description": "Output contracts the role produces. Each output names an artifact type from artifact.schema.json.",
+      "items": {
+        "type": "object",
+        "required": ["name", "kind", "artifact_type", "required"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string", "description": "Short label for the output."},
+          "kind": {
+            "type": "string",
+            "enum": ["spec", "artifact", "signal", "context"],
+            "description": "Output category."
+          },
+          "artifact_type": {
+            "type": "string",
+            "enum": [
+              "spec",
+              "plan",
+              "patch",
+              "pr",
+              "review",
+              "test_report",
+              "eval_report",
+              "screenshot",
+              "log",
+              "trace",
+              "decision_memo",
+              "release_note",
+              "postmortem",
+              "dream_report",
+              "memory_update",
+              "skill_patch",
+              "prompt_patch",
+              "config_patch"
+            ],
+            "description": "Artifact type. Must match the enum in artifact.schema.json."
+          },
+          "required": {"type": "boolean", "description": "Whether the role's completion check rejects the run if this output is missing."}
+        }
+      }
+    },
+    "allowed_tools": {
+      "type": "array",
+      "description": "Tool identifiers (matching the id pattern in tool.schema.json) the role is permitted to invoke. Empty array means a read-only role.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_-]*$"
+      }
+    },
+    "forbidden_actions": {
+      "type": "array",
+      "description": "Free-form list of actions the role must not perform, used by the policy engine as a defense-in-depth deny list. Example values: deploy_to_production, modify_secrets, approve_own_work.",
+      "items": {"type": "string"}
+    },
+    "required_gates": {
+      "type": "array",
+      "description": "Names of proof gates that must pass before the role's run is marked done. Workflows reference these names from steps.gate.",
+      "items": {"type": "string"}
+    },
+    "escalation": {
+      "type": "array",
+      "description": "Escalation paths. When a condition fires, the run hands off to escalate_to (another role id).",
+      "items": {
+        "type": "object",
+        "required": ["condition", "escalate_to"],
+        "additionalProperties": false,
+        "properties": {
+          "condition": {"type": "string", "description": "Free-form condition that triggers the handoff. Example: gate_failed_twice or budget_exceeded."},
+          "escalate_to": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_-]*$",
+            "description": "Role id that takes over."
+          }
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "required": [
+        "read_repo",
+        "write_code",
+        "run_tests",
+        "approve",
+        "deploy",
+        "promote_memory"
+      ],
+      "additionalProperties": false,
+      "description": "Boolean permission flags. The policy engine evaluates these as the first cut before consulting policy rules.",
+      "properties": {
+        "read_repo": {"type": "boolean", "description": "May read repository contents."},
+        "write_code": {"type": "boolean", "description": "May write or modify code files."},
+        "run_tests": {"type": "boolean", "description": "May invoke the test harness."},
+        "approve": {"type": "boolean", "description": "May grant approvals (PR approval, gate override, release sign-off)."},
+        "deploy": {"type": "boolean", "description": "May trigger a deployment."},
+        "promote_memory": {"type": "boolean", "description": "May promote dream candidates into long-term memory."}
+      }
+    },
+    "runtime_hint": {
+      "type": "string",
+      "enum": [
+        "claude_code",
+        "codex_cli",
+        "openai_agents_sdk",
+        "langgraph",
+        "strands",
+        "pydantic_ai",
+        "custom_python"
+      ],
+      "description": "Preferred runtime for executing this role. Informational; the harness may override."
+    },
+    "memory_policy_file": {
+      "type": "string",
+      "description": "Path to the role's memory-policy.yaml, relative to the owning repo root."
+    },
+    "examples_dir": {
+      "type": "string",
+      "description": "Path to a directory of example runs or prompts for the role, relative to the owning repo root."
+    }
+  }
+}

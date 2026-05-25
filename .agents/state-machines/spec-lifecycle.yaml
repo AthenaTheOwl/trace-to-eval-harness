@@ -1,0 +1,30 @@
+# State machine for a spec ledger's lifecycle.
+
+id: spec-lifecycle
+version: 0.1.0
+
+states:
+  - id: drafted
+    description: requirements.md and traceability.md exist.
+  - id: approved
+    description: spec_check passes; one DEC per R-* exists or the R-* is allowlisted.
+  - id: in_implementation
+    description: engineering.implementation has landed at least one patch against an R-* in this spec.
+  - id: complete
+    description: Every R-* has a paired DEC, a passing test, and a release ledger entry.
+  - id: superseded
+    description: A later spec replaces this one.
+
+transitions:
+  - from: drafted
+    to: approved
+    gate: spec_check
+  - from: approved
+    to: in_implementation
+    gate: implementation_role_started
+  - from: in_implementation
+    to: complete
+    gate: all_r_star_resolved
+  - from: complete
+    to: superseded
+    gate: replacing_spec_exists

@@ -61,5 +61,32 @@ cases:
 python -m pytest
 python scripts/voice_lint.py
 python scripts/spec_check.py
+python scripts/validate_decisions.py
+python scripts/validate_roles.py
+python scripts/validate_tools.py
+python scripts/validate_policies.py
+python scripts/validate_skills.py
+python scripts/validate_dreams.py
+python scripts/check_schema_cache_freshness.py
 ```
+
+## Governance
+
+This repo runs under the Cognitive Delivery Control Plane charter at
+[`athena-site/ops/control-plane.md`](https://github.com/AthenaTheOwl/athena-site/blob/main/ops/control-plane.md).
+The charter names six artifact types (specs, decisions, dreams,
+ledgers, schemas, policies) and the cross-repo schemas that gate
+each. Local artifacts:
+
+- `specs/0001-trace-to-eval-harness/` names the R-TTE-* requirements.
+- `decisions/DEC-TTE-*.md` records each architectural choice.
+- `.agents/` holds the six minimum-viable roles, the tool registry,
+  the policy set, the state-machines, and the workflows.
+- `dreams/` reserves the shape for the weekly offline-cognition pass.
+- `ops/RELEASE_LEDGER.md` and `ops/RESET_LEDGER.md` carry the audit
+  trail; `ops/event-log/` holds the structured event stream.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
 

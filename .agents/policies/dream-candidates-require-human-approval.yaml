@@ -1,0 +1,17 @@
+id: dream-candidates-require-human-approval
+applies_to:
+  roles: ["*"]
+  tools: ["*"]
+  actions:
+    - auto_apply_dream_candidate
+decision: deny
+conditions: []
+priority: 200
+description: |
+  Dream candidates require explicit human approval before promotion.
+  No CI job, no agent, no policy override may apply a candidate.
+rationale: |
+  Every candidate carries human_review_required: true per the
+  cross-repo dream-output schema. The policy makes the rule
+  enforceable rather than aspirational.
+owner: platform

@@ -1,0 +1,10 @@
+# Gates the product.spec-writer run must pass before completion. Mirrors
+# the required_gates field in role.yaml.
+
+required_gates:
+  - id: voice_lint
+    script: scripts/voice_lint.py
+    blocking: true
+  - id: spec_check
+    script: scripts/spec_check.py
+    blocking: true

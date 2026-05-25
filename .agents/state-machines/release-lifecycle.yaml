@@ -1,0 +1,20 @@
+# State machine for a release's lifecycle.
+
+id: release-lifecycle
+version: 0.1.0
+
+states:
+  - id: candidate
+    description: Code patch passing gates locally; not yet pushed to main.
+  - id: shipped
+    description: Commit on main; CI green; ops/RELEASE_LEDGER.md entry recorded.
+  - id: rolled_back
+    description: Release reverted; ops/RESET_LEDGER.md carries the entry in the same push.
+
+transitions:
+  - from: candidate
+    to: shipped
+    gate: pushed_to_main_with_ledger_entry
+  - from: shipped
+    to: rolled_back
+    gate: rollback_initiated_with_reset_ledger_entry

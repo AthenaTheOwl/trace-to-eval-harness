@@ -1,0 +1,19 @@
+id: coordinator-routing-only
+applies_to:
+  roles:
+    - control.coordinator
+  tools:
+    - repo.apply_patch
+    - tests.run
+  actions:
+    - modify_code
+decision: deny
+conditions: []
+priority: 100
+description: |
+  The coordinator role is read-and-route-only. It may invoke
+  read-only and gate-running tools but never repo.apply_patch.
+rationale: |
+  Routing is the work. The coordinator's accountability would
+  collapse if it could also land the code it routed.
+owner: platform

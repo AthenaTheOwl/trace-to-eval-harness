@@ -1,0 +1,17 @@
+id: implementation-can-edit-code
+applies_to:
+  roles:
+    - engineering.implementation
+  tools:
+    - repo.apply_patch
+  actions:
+    - modify_code
+decision: allow
+conditions: []
+priority: 50
+description: |
+  The implementation role may edit code under src/ and tests/.
+rationale: |
+  Implementation is authorship. The default-deny baseline blocks all
+  modify_code; this policy opens the surface the role needs.
+owner: platform

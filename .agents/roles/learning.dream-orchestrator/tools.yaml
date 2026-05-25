@@ -1,0 +1,8 @@
+# Tool subset this role may invoke. Cross-checked against
+# .agents/tools.yaml. All entries here also appear in role.yaml's
+# allowed_tools list.
+
+allowed_tools:
+  - repo.read
+  - dream.read_recent_commits
+  - dream.write_candidate

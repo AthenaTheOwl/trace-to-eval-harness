@@ -1,0 +1,29 @@
+# .agents/workflows/incident-response.yaml
+
+id: incident-response
+version: 0.1.0
+owner_guild: control
+description: |
+  The steps an incident moves through. Goal: contain the bad state,
+  record what happened, and decide whether to revert or roll forward.
+
+trigger:
+  - signal: ci_gate_misfire_detected
+  - signal: prod_regression
+
+steps:
+  - id: contain
+    role: control.coordinator
+    output_type: log
+  - id: diagnose
+    role: science.proof-gate-runner
+    output_type: postmortem
+  - id: decide
+    role: control.coordinator
+    output_type: decision_memo
+  - id: record_reset
+    role: control.coordinator
+    output_type: log
+  - id: postmortem
+    role: science.proof-gate-runner
+    output_type: postmortem

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://athena.dev/ops/schemas/skill.schema.json",
+  "title": "Skill",
+  "description": "A packaged reusable skill: instructions plus optional scripts and evals, graduated from a pattern that recurred enough times across runs to deserve a name. Skills are never invented from scratch; they are extracted from observed practice.",
+  "type": "object",
+  "required": [
+    "id",
+    "version",
+    "owner_guild",
+    "trigger",
+    "instructions_file",
+    "scripts",
+    "evals",
+    "promotion_policy"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Skill identifier in kebab-case. Example: voice-lint or weekly-portfolio-audit."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$",
+      "description": "Semantic version. A breaking change to instructions, trigger surface, or script API requires a major bump."
+    },
+    "owner_guild": {
+      "type": "string",
+      "description": "Team or guild accountable for maintaining the skill and reviewing its evals."
+    },
+    "trigger": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string"},
+      "description": "Phrases or situations that should invoke the skill. Used by the harness or human reviewer to decide when the skill applies."
+    },
+    "instructions_file": {
+      "type": "string",
+      "description": "Path to the markdown file containing the skill's instructions, relative to the repo root."
+    },
+    "scripts": {
+      "type": "array",
+      "description": "Executable helpers shipped with the skill. May be empty for instruction-only skills.",
+      "items": {
+        "type": "object",
+        "required": ["name", "path"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string", "description": "Short script name used in the skill instructions."},
+          "path": {"type": "string", "description": "Path to the script file, relative to the repo root."},
+          "description": {"type": "string", "description": "One-line description of what the script does."}
+        }
+      }
+    },
+    "evals": {
+      "type": "array",
+      "description": "Eval cases that exercise the skill. May be empty for early-stage skills, but promotion past proposed status should require at least one passing eval.",
+      "items": {
+        "type": "object",
+        "required": ["name", "path"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string", "description": "Eval case name."},
+          "path": {"type": "string", "description": "Path to the eval file or directory."},
+          "description": {"type": "string", "description": "What this eval checks."}
+        }
+      }
+    },
+    "promotion_policy": {
+      "type": "object",
+      "required": ["requires"],
+      "additionalProperties": false,
+      "description": "Conditions that must hold before the skill can graduate from proposed to active.",
+      "properties": {
+        "requires": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Gates the skill must pass. At least one must be listed.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "passing_skill_eval",
+              "security_review",
+              "human_approval"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

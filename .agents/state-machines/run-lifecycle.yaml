@@ -1,0 +1,30 @@
+# State machine for a single agent run's lifecycle.
+
+id: run-lifecycle
+version: 0.1.0
+
+states:
+  - id: queued
+    description: Run accepted; inputs pinned.
+  - id: in_progress
+    description: Role is actively producing outputs.
+  - id: awaiting_gate
+    description: Role finished; gates are still running.
+  - id: completed
+    description: All required gates passed.
+  - id: failed
+    description: At least one blocking gate failed.
+
+transitions:
+  - from: queued
+    to: in_progress
+    gate: inputs_ready
+  - from: in_progress
+    to: awaiting_gate
+    gate: outputs_emitted
+  - from: awaiting_gate
+    to: completed
+    gate: gates_passing
+  - from: awaiting_gate
+    to: failed
+    gate: gate_blocking_fail

@@ -1,0 +1,35 @@
+# .agents/workflows/single-change.yaml
+#
+# The steps a single trace-to-eval-harness change moves through.
+
+id: single-change
+version: 0.1.0
+owner_guild: control
+description: |
+  The steps a single change moves through, from intake to release.
+
+steps:
+  - id: intake
+    role: control.coordinator
+    output_type: backlog_item
+  - id: spec
+    role: product.spec-writer
+    output_type: spec
+  - id: architecture
+    role: product.spec-writer
+    output_type: decision_memo
+  - id: implementation
+    role: engineering.implementation
+    output_type: patch
+  - id: code_review
+    role: engineering.code-reviewer
+    output_type: review
+  - id: tests
+    role: engineering.implementation
+    output_type: test_report
+  - id: gates
+    role: science.proof-gate-runner
+    output_type: test_report
+  - id: release
+    role: control.coordinator
+    output_type: release_note

@@ -1,0 +1,18 @@
+id: reviewer-cannot-edit-code
+applies_to:
+  roles:
+    - engineering.code-reviewer
+  tools:
+    - repo.apply_patch
+  actions:
+    - modify_code
+decision: deny
+conditions: []
+priority: 100
+description: |
+  The code-reviewer role may read the diff and approve or request
+  changes but may not edit the code itself.
+rationale: |
+  Review is judgment, not authorship. A reviewer who edits the diff
+  cannot then approve it without collapsing the review boundary.
+owner: platform

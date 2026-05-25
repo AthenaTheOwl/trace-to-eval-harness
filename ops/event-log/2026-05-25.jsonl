@@ -1,0 +1,2 @@
+{"type":"cdcp.installed","timestamp":"2026-05-25T00:00:00Z","actor":"control.coordinator","spec":"specs/0001-trace-to-eval-harness/","decision":"DEC-TTE-004-install-cdcp-governance","scope":["specs","decisions","dreams","ops",".agents","scripts"],"note":"Base CDCP + operating-model layer installed in one pass."}
+{"type":"spec.created","timestamp":"2026-05-25T00:00:01Z","actor":"product.spec-writer","spec_id":"0001-trace-to-eval-harness","requirement_count":5,"prefix":"TTE","files":["requirements.md","traceability.md"]}

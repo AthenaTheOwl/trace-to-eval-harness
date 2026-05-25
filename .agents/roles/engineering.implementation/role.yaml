@@ -1,0 +1,47 @@
+id: engineering.implementation
+guild: engineering
+mission: Land the narrowest traceable code slice that resolves an R-TTE-* requirement; edit existing files over creating new ones.
+inputs:
+  - name: spec_ledger
+    kind: spec
+    required: true
+  - name: decision_record
+    kind: artifact
+    required: true
+outputs:
+  - name: code_patch
+    kind: artifact
+    artifact_type: patch
+    required: true
+  - name: test_update
+    kind: artifact
+    artifact_type: patch
+    required: false
+allowed_tools:
+  - repo.read
+  - repo.apply_patch
+  - tests.run
+  - gates.run_voice_lint
+  - gates.run_spec_check
+forbidden_actions:
+  - modify_prompts_without_eval_proof
+  - approve_own_work
+  - deploy_to_production
+  - modify_secrets
+required_gates:
+  - tests
+  - spec_check
+escalation:
+  - condition: gate_regression_detected
+    escalate_to: science.proof-gate-runner
+  - condition: code_review_changes_requested
+    escalate_to: engineering.code-reviewer
+permissions:
+  read_repo: true
+  write_code: true
+  run_tests: true
+  approve: false
+  deploy: false
+  promote_memory: false
+runtime_hint: claude_code
+examples_dir: .agents/roles/engineering.implementation/examples

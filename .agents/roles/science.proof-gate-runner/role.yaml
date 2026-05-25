@@ -1,0 +1,44 @@
+id: science.proof-gate-runner
+guild: science
+mission: Own the python governance gates and the pytest suite; refuse merges that regress any of them.
+inputs:
+  - name: code_patch
+    kind: artifact
+    required: true
+  - name: test_suite
+    kind: spec
+    required: true
+outputs:
+  - name: gate_run
+    kind: artifact
+    artifact_type: test_report
+    required: true
+allowed_tools:
+  - repo.read
+  - tests.run
+  - gates.run_voice_lint
+  - gates.run_spec_check
+  - gates.run_validate_decisions
+forbidden_actions:
+  - modify_code
+  - modify_prompts
+  - approve_own_work
+  - deploy_to_production
+required_gates:
+  - voice_lint
+  - spec_check
+  - validate_decisions
+escalation:
+  - condition: persistent_test_regression
+    escalate_to: engineering.implementation
+  - condition: governance_gate_misfire
+    escalate_to: control.coordinator
+permissions:
+  read_repo: true
+  write_code: false
+  run_tests: true
+  approve: true
+  deploy: false
+  promote_memory: false
+runtime_hint: claude_code
+examples_dir: .agents/roles/science.proof-gate-runner/examples
