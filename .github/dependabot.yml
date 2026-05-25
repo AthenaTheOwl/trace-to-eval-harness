@@ -1,0 +1,32 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    # Major-version bumps on the test + schema-validation stack require
+    # coordinated migrations. Minor + patch still flow through; major bumps
+    # land via a deliberate spec, not a surprise Dependabot PR.
+    ignore:
+      - dependency-name: "pytest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "pytest-cov"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "PyYAML"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jsonschema"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "referencing"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+      - github-actions
