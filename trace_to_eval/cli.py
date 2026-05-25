@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 import sys
 
+from .cdcp_events import import_cdcp_events
 from .ingest import ingest_trace
 from .report import write_reports
 from .runner import run_eval_file
@@ -20,6 +21,13 @@ def build_parser() -> argparse.ArgumentParser:
     ingest = subparsers.add_parser("ingest", help="turn one failed trace into a YAML case")
     ingest.add_argument("trace", type=Path)
     ingest.add_argument("--out", type=Path, required=True)
+
+    cdcp_events = subparsers.add_parser(
+        "from-cdcp-events",
+        help="turn CDCP event-log JSONL entries into draft eval cases",
+    )
+    cdcp_events.add_argument("path", type=Path)
+    cdcp_events.add_argument("--out", type=Path, required=True)
 
     run = subparsers.add_parser("run", help="run eval cases against trace JSON files")
     run.add_argument("eval_cases", type=Path)
@@ -51,6 +59,31 @@ def main(argv: list[str] | None = None) -> int:
         payload = ingest_trace(args.trace, args.out)
         checks = sum(len(case.get("checks", [])) for case in payload["cases"])
         print(f"wrote {args.out} ({len(payload['cases'])} case, {checks} checks)")
+        return 0
+
+    if args.command == "from-cdcp-events":
+        result = import_cdcp_events(args.path, args.out)
+        for error in result.line_errors:
+            print(
+                f"warning: skipped {error.source_path}:{error.line_number}: {error.message}",
+                file=sys.stderr,
+            )
+        if result.output_path is None:
+            print(
+                f"no candidate eval cases found ({result.events_read} events read, "
+                f"{result.ignored_events} ignored)",
+                file=sys.stderr,
+            )
+            return 1
+        print(
+            f"wrote {result.output_path} "
+            f"({result.case_count} draft case(s), {result.ignored_events} ignored event(s))"
+        )
+        if result.line_errors:
+            print(
+                f"skipped {len(result.line_errors)} malformed JSONL line(s)",
+                file=sys.stderr,
+            )
         return 0
 
     if args.command == "run":

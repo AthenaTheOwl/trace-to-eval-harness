@@ -16,12 +16,18 @@ Trace-To-Eval Harness turns a failed AI trace into a checked-in eval case. You f
 ```powershell
 python -m pip install -e .[dev]
 python -m trace_to_eval ingest examples/traces/bad_citation.json --out eval_cases/generated.yaml
+python -m trace_to_eval from-cdcp-events ../portfolio-repo/ops/event-log --out eval_cases/cdcp
 python -m trace_to_eval validate trace examples/traces/bad_citation.json
 python -m trace_to_eval validate eval examples/eval_cases.yaml
 python -m trace_to_eval run examples/eval_cases.yaml --traces examples/traces --out reports/run.json
 ```
 
 The run command writes `reports/run.json` and `reports/run.md`. Add `--fail-on-failure` when a CI gate should exit non-zero on failed cases.
+
+The CDCP event-log command accepts an event-log file, an event-log
+directory, or a repo root with `ops/event-log/*.jsonl`. It writes
+`cdcp_event_cases.yaml` with draft cases carrying
+`human_review.status: review-needed`.
 
 ## What It Catches
 

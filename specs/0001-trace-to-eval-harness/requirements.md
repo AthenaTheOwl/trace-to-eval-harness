@@ -20,6 +20,14 @@ The runner must write JSON and Markdown reports with case, suite, and check coun
 
 The repo must run tests, voice lint, and spec checks locally and in GitHub Actions.
 
+### R-TTE-006: CDCP event-log adapter
+
+The CLI must read CDCP JSONL event logs from a file, event-log
+directory, or repo root; skip malformed lines without aborting; and
+map failed gate, review finding, or incident events with explicit
+trace payloads into draft eval cases that require human review before
+promotion.
+
 ### R-TTE-SCHEMA-001: Published schemas
 
 The repo must publish JSON Schemas for trace, eval case, and run report shapes under `schemas/`.
