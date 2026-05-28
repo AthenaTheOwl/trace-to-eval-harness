@@ -1,0 +1,35 @@
+{
+  "approval_events": [],
+  "artifact_diffs": [],
+  "cost_usage": null,
+  "gate_results": [
+    {
+      "name": "gate.run.evidence_recorded",
+      "source_event_id": "b7bf5a4f-3d82-452f-a455-48bd2fba86c9",
+      "status": "unknown",
+      "summary": null
+    }
+  ],
+  "generated_at": "2026-05-28T02:08:28Z",
+  "input_refs": [
+    {
+      "description": "CDCP event log input",
+      "hash": "sha256:6b073c7f096faa7b64b661e060f5b7b62d8da1c2ca944c16300bc8851ea1c25d",
+      "kind": "event-log",
+      "uri": "E:/claude_code/random-apps/ai-field-brief/ops/event-ledger/run-5cd81663b4f4.jsonl"
+    }
+  ],
+  "mcp_servers": [],
+  "model": null,
+  "notes": [
+    "Generated from explicit CDCP event-log fields only.",
+    "RunState or runtime snapshot data can be attached later as input refs."
+  ],
+  "policy_decisions": [],
+  "rollback_refs": [],
+  "run_id": "cdcp-a68772369a25",
+  "runtime_provider": "cdcp-event-log",
+  "schema_version": "1.0.0",
+  "tool_calls": [],
+  "trace_refs": []
+}

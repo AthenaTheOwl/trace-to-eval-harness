@@ -1,0 +1,55 @@
+{
+  "approval_events": [
+    {
+      "actor": null,
+      "source_event_id": "b062063c-e1f8-45e7-93d1-fc1becea9051",
+      "status": "unknown",
+      "subject": "tool.call.completed"
+    }
+  ],
+  "artifact_diffs": [],
+  "cost_usage": null,
+  "gate_results": [
+    {
+      "name": "refusal_precision_threshold",
+      "source_event_id": "72a24ccb-69fc-4e93-ba8a-e610b5cac9f0",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "gate.run.evidence_recorded",
+      "source_event_id": "e1584dc9-10e7-4eea-a0b0-4ecdcfec68f8",
+      "status": "unknown",
+      "summary": null
+    }
+  ],
+  "generated_at": "2026-05-28T02:09:14Z",
+  "input_refs": [
+    {
+      "description": "CDCP event log input",
+      "hash": "sha256:15952c604a58c0a2bfb671f13b44f34a1baf5269bb8a575dba6b578b5f474324",
+      "kind": "event-log",
+      "uri": "E:/claude_code/random-apps/supplier-risk-rag-agent/ops/event-ledger/run-13f2a48fe8bc.jsonl"
+    }
+  ],
+  "mcp_servers": [],
+  "model": null,
+  "notes": [
+    "Generated from explicit CDCP event-log fields only.",
+    "RunState or runtime snapshot data can be attached later as input refs."
+  ],
+  "policy_decisions": [],
+  "rollback_refs": [],
+  "run_id": "cdcp-3915962820d9",
+  "runtime_provider": "cdcp-event-log",
+  "schema_version": "1.0.0",
+  "tool_calls": [
+    {
+      "decision": "unknown",
+      "name": "tool.call.completed",
+      "server": null,
+      "source_event_id": "b062063c-e1f8-45e7-93d1-fc1becea9051"
+    }
+  ],
+  "trace_refs": []
+}
