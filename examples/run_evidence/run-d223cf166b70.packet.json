@@ -1,0 +1,143 @@
+{
+  "approval_events": [
+    {
+      "actor": null,
+      "source_event_id": "23b7498c-1032-4418-80ff-11000311f7f2",
+      "status": "unknown",
+      "subject": "pipeline.complete"
+    }
+  ],
+  "artifact_diffs": [],
+  "artifact_hashes": [
+    {
+      "hash": "7d34f2664b0070abcba8f8c12c9746e8ced7ecdf12c6104a46020449ec0e7868",
+      "ref": "briefs/2026-W21/brief.md"
+    },
+    {
+      "hash": "fcbcd0433d7fd70cd3e2194a9d542844f213e30a88095cbf26e51988d58b971c",
+      "ref": "briefs/2026-W21/meta.yaml"
+    }
+  ],
+  "artifact_refs": [
+    {
+      "artifact_id": "briefs/2026-W21/brief.md",
+      "kind": "brief",
+      "ref": "briefs/2026-W21/brief.md"
+    },
+    {
+      "artifact_id": "briefs/2026-W21/meta.yaml",
+      "kind": "meta",
+      "ref": "briefs/2026-W21/meta.yaml"
+    }
+  ],
+  "cost_usage": null,
+  "event_log_hash": "ab12297ad26a36f58e770bd0eb7f60754b0ff5e1a142c49b2310762427b2d763",
+  "event_log_ref": "../ai-field-brief/ops/event-ledger/run-d223cf166b70.jsonl",
+  "gate_results": [
+    {
+      "name": "voice_lint",
+      "source_event_id": "ca62c187-5417-4f66-a667-4ad0bd760618",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "spec_check",
+      "source_event_id": "c7317a4a-28e4-4a48-aa92-bc6c4d3af317",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "check_no_bom",
+      "source_event_id": "419e0068-71aa-40df-aed6-0dd59a9300b8",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_schemas",
+      "source_event_id": "51c9355a-ceca-4349-81e9-48c44d3008f0",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_registry",
+      "source_event_id": "3190a5f3-7ef7-4336-aed8-36757e49f505",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_decisions",
+      "source_event_id": "e5c2ad4c-8868-46e3-a4e2-fe2de371f488",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_roles",
+      "source_event_id": "3578136e-c705-4c0a-90b4-1044c9d91c78",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_tools",
+      "source_event_id": "0ca155b4-44fb-4ecc-83e9-a85187ea98bc",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_policies",
+      "source_event_id": "7bc49c12-b4f2-4d6e-b182-1ed5cf043c71",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_skills",
+      "source_event_id": "7b21b612-669f-40c6-8d4a-d9d18c331e4d",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_dreams",
+      "source_event_id": "c4c36e41-2593-4747-ab9b-dd7e0edc1c3c",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "check_schema_cache_freshness",
+      "source_event_id": "cf47e61e-9e69-45e2-8798-7f1a7550ef43",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "gate.run.evidence_recorded",
+      "source_event_id": "8c316f84-2bcb-4759-8cf4-7ac37398041a",
+      "status": "unknown",
+      "summary": null
+    }
+  ],
+  "generated_at": "2026-05-28T11:45:47Z",
+  "input_refs": [
+    {
+      "description": "CDCP event log input",
+      "hash": "sha256:ab12297ad26a36f58e770bd0eb7f60754b0ff5e1a142c49b2310762427b2d763",
+      "kind": "event-log",
+      "uri": "E:/claude_code/random-apps/ai-field-brief/ops/event-ledger/run-d223cf166b70.jsonl"
+    }
+  ],
+  "mcp_servers": [],
+  "model": null,
+  "notes": [
+    "Generated from CDCP event log + producer Run record; refs and hashes preserve provenance."
+  ],
+  "policy_decisions": [],
+  "producer_run_id": "run-d223cf166b70",
+  "prompt_snapshot_hash": "b0f549651e7d4d23907038bf53d431ba2d2db4a3a4172ef56b0e5fb9cd25fcf7",
+  "rollback_refs": [],
+  "run_id": "run-d223cf166b70",
+  "run_record_hash": "285501d9060cc9863492a8dfe8fc0ea6cbc2c349d69f41a1fb4fef8941a2744a",
+  "run_record_ref": "../ai-field-brief/ops/run-records/run-d223cf166b70.json",
+  "runtime_provider": "cdcp-event-log",
+  "sandbox_image_ref": "E:/claude_code/random-apps/ai-field-brief@d811676fc646367abc485fd0654a35bc6f04ee57",
+  "schema_version": "2.0.0",
+  "tool_calls": [],
+  "tool_schemas_snapshot_hash": "32b4ee1bba905ea25e36325eca2240c3ebdc83c928663fe287e03c2bc36d0501",
+  "trace_refs": []
+}

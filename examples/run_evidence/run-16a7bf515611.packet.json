@@ -1,0 +1,87 @@
+{
+  "approval_events": [
+    {
+      "actor": null,
+      "source_event_id": "2db563fc-b491-4951-8eb9-aaa9d6b0b7e7",
+      "status": "unknown",
+      "subject": "pipeline.done"
+    }
+  ],
+  "artifact_diffs": [],
+  "cost_usage": null,
+  "event_log_hash": "1674308c095cf19a07adeaf92abfcf11b657b1e697eafb4ecf1e12e9fc3236f6",
+  "event_log_ref": "../procurement-negotiation-lab/ops/event-ledger/run-16a7bf515611.jsonl",
+  "gate_results": [
+    {
+      "name": "typecheck",
+      "source_event_id": "e273ba19-e296-44de-ae16-cb8c3f562e7a",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "vitest",
+      "source_event_id": "0bc1ab2d-3e2c-477f-8936-7bf9495410e1",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "spec_check",
+      "source_event_id": "4b02f587-1356-4c82-b9b5-829795910cca",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "gate.run.evidence_recorded",
+      "source_event_id": "79d56fae-08b2-471b-9a12-a93269f532a5",
+      "status": "unknown",
+      "summary": null
+    }
+  ],
+  "generated_at": "2026-05-28T11:48:03Z",
+  "input_refs": [
+    {
+      "description": "CDCP event log input",
+      "hash": "sha256:1674308c095cf19a07adeaf92abfcf11b657b1e697eafb4ecf1e12e9fc3236f6",
+      "kind": "event-log",
+      "uri": "E:/claude_code/random-apps/procurement-negotiation-lab/ops/event-ledger/run-16a7bf515611.jsonl"
+    }
+  ],
+  "mcp_servers": [],
+  "model": null,
+  "notes": [
+    "Generated from CDCP event log + producer Run record; refs and hashes preserve provenance."
+  ],
+  "policy_decisions": [],
+  "producer_run_id": "run-16a7bf515611",
+  "prompt_snapshot_hash": "eb599443822c3aa2abb21160bb3cb234e196ce768ad7072db99fc9be8f2293f5",
+  "rollback_refs": [],
+  "run_id": "run-16a7bf515611",
+  "run_record_hash": "caf46e0dc33b3fdd9824be4be2eb6fb188248595a4f786ee39ecdebb38db0dd9",
+  "run_record_ref": "../procurement-negotiation-lab/ops/run-records/run-16a7bf515611.json",
+  "runtime_provider": "cdcp-event-log",
+  "sandbox_image_ref": "E:/claude_code/random-apps/procurement-negotiation-lab@0ad6f8388027aef7cb4719a8fa81faeae3c73349",
+  "schema_version": "2.0.0",
+  "tool_calls": [
+    {
+      "decision": "unknown",
+      "name": "claude_code",
+      "server": null,
+      "source_event_id": "a396b429-8059-42d7-911d-c3a05f62010e"
+    },
+    {
+      "decision": "unknown",
+      "name": "claude_code",
+      "server": null,
+      "source_event_id": "6f6e6f8b-d17b-4884-a510-d13e308cd42b"
+    }
+  ],
+  "tool_schemas_snapshot_hash": "0051bdbb230ae794642e42a0033aca8e30f200c59c51a9f4899e6e90a6b42965",
+  "trace_refs": [
+    {
+      "description": "Trace id from CDCP event",
+      "hash": null,
+      "kind": "trace-id",
+      "uri": "542dae8a4f404bedb765fa91c8d3ff09"
+    }
+  ]
+}
