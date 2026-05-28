@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://athena.dev/ops/schemas/event.schema.json",
+  "title": "Event",
+  "description": "An append-only event-ledger entry. Events are the universal join key across runs, tools, artifacts, gates, and releases. Every record is immutable once written; corrections land as a new event with a parent_event_id pointer. The eight canonical event types (pipeline.start/complete/done, tool.call.started/completed, gate.check.passed/failed, gate.run.evidence_recorded, run.evidence.replayed) have typed payload schemas via the oneOf discriminator; other event types pass envelope validation only.",
+  "type": "object",
+  "$defs": {
+    "sha256-hex": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "required": [
+    "event_id",
+    "type",
+    "created_at",
+    "actor",
+    "payload"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID for this event. Unique across the portfolio."
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$",
+      "description": "Dotted namespace event type. Examples: tool.call.completed, agent.run.started, artifact.produced, proof.gate.passed, release.shipped, memory.promoted, decision.recorded, dream.candidate.generated. The canonical vocabulary lives in ops/event-types.md."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC 3339 timestamp when the event was recorded."
+    },
+    "actor": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "additionalProperties": false,
+      "description": "Who or what caused the event.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["role", "human", "system"],
+          "description": "Actor category. role means an agent acting under a role contract; human means a person; system means an automated trigger such as cron."
+        },
+        "id": {
+          "type": "string",
+          "description": "Actor identifier. For role, the role id. For human, the handle or email. For system, the trigger name."
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "description": "Event-specific payload. The eight canonical event types have typed payload schemas enforced via the top-level oneOf discriminator. Other event types pass envelope validation only; their payload contracts live in ops/event-types.md."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Run identifier this event belongs to, when applicable."
+    },
+    "spec_id": {
+      "type": "string",
+      "description": "Spec identifier this event relates to, when applicable."
+    },
+    "artifact_id": {
+      "type": "string",
+      "description": "Artifact identifier this event produced or referenced, when applicable."
+    },
+    "cost_usd": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Dollar cost attributed to this event, when applicable."
+    },
+    "tokens_input": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Input tokens consumed by the action that fired this event, when applicable."
+    },
+    "tokens_output": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Output tokens emitted by the action that fired this event, when applicable."
+    },
+    "parent_event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Event id this one descends from, used to reconstruct causal chains."
+    }
+  },
+  "oneOf": [
+    {
+      "title": "pipeline.start",
+      "properties": {
+        "type": { "const": "pipeline.start" },
+        "payload": {
+          "type": "object",
+          "required": ["prompt_snapshot_hash", "tool_schemas_snapshot_hash"],
+          "properties": {
+            "prompt_snapshot_hash": { "$ref": "#/$defs/sha256-hex" },
+            "tool_schemas_snapshot_hash": { "$ref": "#/$defs/sha256-hex" }
+          }
+        }
+      }
+    },
+    {
+      "title": "pipeline.complete",
+      "properties": {
+        "type": { "const": "pipeline.complete" },
+        "payload": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": { "type": "string", "enum": ["done", "failed", "cancelled"] },
+            "gate_results_summary": {
+              "type": "object",
+              "properties": {
+                "gates_passed": { "type": "array", "items": { "type": "string" } },
+                "gates_failed": { "type": "array", "items": { "type": "string" } },
+                "all_passed": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "pipeline.done",
+      "properties": {
+        "type": { "const": "pipeline.done" },
+        "payload": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": { "type": "string", "enum": ["done", "failed", "cancelled"] },
+            "gate_results_summary": {
+              "type": "object",
+              "properties": {
+                "gates_passed": { "type": "array", "items": { "type": "string" } },
+                "gates_failed": { "type": "array", "items": { "type": "string" } },
+                "all_passed": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "tool.call.started",
+      "properties": {
+        "type": { "const": "tool.call.started" },
+        "payload": {
+          "type": "object",
+          "required": ["tool_name"],
+          "properties": {
+            "tool_name": { "type": "string", "minLength": 1 },
+            "args": { "type": "object" }
+          }
+        }
+      }
+    },
+    {
+      "title": "tool.call.completed",
+      "properties": {
+        "type": { "const": "tool.call.completed" },
+        "payload": {
+          "type": "object",
+          "required": ["tool_name"],
+          "properties": {
+            "tool_name": { "type": "string", "minLength": 1 },
+            "result": {},
+            "duration_ms": { "type": "integer", "minimum": 0 },
+            "error": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "title": "gate.check.passed",
+      "properties": {
+        "type": { "const": "gate.check.passed" },
+        "payload": {
+          "type": "object",
+          "required": ["gate_name"],
+          "properties": {
+            "gate_name": { "type": "string", "minLength": 1 },
+            "details": {}
+          }
+        }
+      }
+    },
+    {
+      "title": "gate.check.failed",
+      "properties": {
+        "type": { "const": "gate.check.failed" },
+        "payload": {
+          "type": "object",
+          "required": ["gate_name", "reason"],
+          "properties": {
+            "gate_name": { "type": "string", "minLength": 1 },
+            "reason": { "type": "string", "minLength": 1 },
+            "details": {}
+          }
+        }
+      }
+    },
+    {
+      "title": "gate.run.evidence_recorded",
+      "properties": {
+        "type": { "const": "gate.run.evidence_recorded" },
+        "payload": {
+          "type": "object",
+          "required": ["run_id", "fields_populated"],
+          "properties": {
+            "run_id": { "type": "string", "minLength": 1 },
+            "fields_populated": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "prompt_snapshot_hash",
+                  "tool_schemas_snapshot_hash",
+                  "determinism",
+                  "checkpoint_ref",
+                  "sandbox_image_ref",
+                  "gate_results_summary"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "run.evidence.replayed",
+      "properties": {
+        "type": { "const": "run.evidence.replayed" },
+        "payload": {
+          "type": "object",
+          "required": ["run_id", "packet_ref", "replay_equivalent"],
+          "properties": {
+            "run_id": { "type": "string", "minLength": 1 },
+            "packet_ref": { "type": "string", "minLength": 1 },
+            "replay_equivalent": { "type": "boolean" },
+            "replay_method": { "type": "string", "enum": ["deterministic", "equivalence"] }
+          }
+        }
+      }
+    },
+    {
+      "title": "other-event-types",
+      "description": "Escape hatch: any event whose type does NOT match one of the eight typed branches above passes payload validation. This preserves the v1 contract that the ledger absorbs new event types without a schema bump; only the eight canonical types are typed-enforced. Add a new branch to upgrade enforcement.",
+      "properties": {
+        "type": {
+          "not": {
+            "enum": [
+              "pipeline.start", "pipeline.complete", "pipeline.done",
+              "tool.call.started", "tool.call.completed",
+              "gate.check.passed", "gate.check.failed",
+              "gate.run.evidence_recorded", "run.evidence.replayed"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
