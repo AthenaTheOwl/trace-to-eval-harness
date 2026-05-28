@@ -31,6 +31,16 @@ directory, or a repo root with `ops/event-log/*.jsonl`. It writes
 `cdcp_event_cases.yaml` with draft cases carrying
 `human_review.status: review-needed`.
 
+## Example Run-Evidence Packet
+
+`examples/run_evidence/run-cb524eb06115.packet.json` is the first
+bridge-demo packet: a real CDCP Event ledger from a
+procurement-negotiation-lab factory run, piped through this repo's
+`evidence from-cdcp-events` CLI. The packet validates against
+`schemas/run-evidence.schema.json`. See
+[`examples/run_evidence/README.md`](examples/run_evidence/README.md)
+for the regeneration steps and a pointer to the upstream emitter.
+
 ## What It Catches
 
 - Required text missing from an answer.

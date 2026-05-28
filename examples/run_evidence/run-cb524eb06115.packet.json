@@ -1,0 +1,80 @@
+{
+  "approval_events": [
+    {
+      "actor": null,
+      "source_event_id": "6c40d3ec-3663-4f0b-aa8e-019aebb46ffc",
+      "status": "unknown",
+      "subject": "tool.call.completed"
+    }
+  ],
+  "artifact_diffs": [],
+  "cost_usage": null,
+  "gate_results": [
+    {
+      "name": "typecheck",
+      "source_event_id": "7f0f2036-e1fb-4ce4-9dac-b97c73868e93",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "vitest",
+      "source_event_id": "10061d50-213a-422b-bbb2-3a13e26da448",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "spec_check",
+      "source_event_id": "51ce939b-cd48-4bcf-8504-d90cfad345ab",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "gate.run.evidence_recorded",
+      "source_event_id": "de2b05f8-8038-46af-b7f9-fbe14fc034bd",
+      "status": "unknown",
+      "summary": null
+    }
+  ],
+  "generated_at": "2026-05-28T01:40:16Z",
+  "input_refs": [
+    {
+      "description": "CDCP event log input",
+      "hash": "sha256:def8437d1679eb1caa4a2793c5922f307d6db107099509e96b5f3ddaba1d810e",
+      "kind": "event-log",
+      "uri": "E:/claude_code/random-apps/procurement-negotiation-lab/ops/event-ledger/run-cb524eb06115.jsonl"
+    }
+  ],
+  "mcp_servers": [],
+  "model": null,
+  "notes": [
+    "Generated from explicit CDCP event-log fields only.",
+    "RunState or runtime snapshot data can be attached later as input refs."
+  ],
+  "policy_decisions": [],
+  "rollback_refs": [],
+  "run_id": "cdcp-2b3e5aa43c06",
+  "runtime_provider": "cdcp-event-log",
+  "schema_version": "1.0.0",
+  "tool_calls": [
+    {
+      "decision": "unknown",
+      "name": "tool.call.started",
+      "server": null,
+      "source_event_id": "547be1f8-f509-4a1f-b301-21af5f9b1a38"
+    },
+    {
+      "decision": "unknown",
+      "name": "tool.call.completed",
+      "server": null,
+      "source_event_id": "6c40d3ec-3663-4f0b-aa8e-019aebb46ffc"
+    }
+  ],
+  "trace_refs": [
+    {
+      "description": "Trace id from CDCP event",
+      "hash": null,
+      "kind": "trace-id",
+      "uri": "a56af7c83ad24d9f88b2629552f10f43"
+    }
+  ]
+}
