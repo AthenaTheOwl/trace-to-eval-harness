@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://athena.dev/ops/schemas/run.schema.json",
+  "title": "Run",
+  "description": "A single agent run inside a workspace or sandbox. A Run records which spec it targeted, which agent executed it, what inputs were supplied, what events fired, what outputs landed, what it cost, and (optionally) the replay-equivalence evidence — prompt/tool-schema hashes, determinism knobs, checkpoint and sandbox refs, gate rollup. Runs are the join key between Decisions and Artifacts, and the source from which review packets (see trace-to-eval-harness/schemas/run-evidence.schema.json) are derived.",
+  "type": "object",
+  "required": [
+    "id",
+    "spec_id",
+    "agent_id",
+    "runtime",
+    "workspace_id",
+    "started_at",
+    "status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable run identifier, unique within the producing repo."
+    },
+    "spec_id": {
+      "type": "string",
+      "description": "Spec this run targets. Example: specs/0001-cognitive-delivery-control-plane/."
+    },
+    "agent_id": {
+      "type": "string",
+      "description": "Identifier of the executing agent. Example: claude-opus-4-7 or codex-cli."
+    },
+    "runtime": {
+      "type": "string",
+      "description": "Runtime environment label. Example: claude-code-cli, codex-cli, github-actions, vercel-build."
+    },
+    "workspace_id": {
+      "type": "string",
+      "description": "Identifier of the workspace or sandbox the run executed inside."
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the run started."
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the run finished. Omitted while the run is still in progress."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["running", "needs_review", "done", "failed", "cancelled"],
+      "description": "Lifecycle state of the run."
+    },
+    "inputs": {
+      "type": "array",
+      "description": "Inputs supplied to the run. Each entry is a kind tag plus an opaque ref.",
+      "items": {
+        "type": "object",
+        "required": ["kind", "ref"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {"type": "string", "description": "Input category. Example: prompt, file, url, dataset."},
+          "ref": {"type": "string", "description": "Pointer to the input (path, URL, or id)."}
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "description": "Timeline of notable events during the run.",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "kind", "payload"],
+        "additionalProperties": false,
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp for the event."
+          },
+          "kind": {
+            "type": "string",
+            "description": "Event type. Example: tool_call, tool_result, gate_check, human_intervention, error."
+          },
+          "payload": {
+            "description": "Event-specific payload. Schema varies by kind; consumers must dispatch on kind."
+          }
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "description": "Artifacts the run produced. Each entry references an Artifact by id.",
+      "items": {
+        "type": "object",
+        "required": ["artifact_id"],
+        "additionalProperties": false,
+        "properties": {
+          "artifact_id": {"type": "string", "description": "Id of the produced Artifact."},
+          "type": {"type": "string", "description": "Optional cached copy of the artifact type for quick scanning."}
+        }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Resource cost of the run. Optional but recommended for any run that calls a paid model.",
+      "properties": {
+        "tokens_input": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total input tokens consumed across all model calls in this run."
+        },
+        "tokens_output": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total output tokens emitted across all model calls in this run."
+        },
+        "dollars_estimated": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Estimated dollar cost of the run, computed from the token counts and the model's posted rates."
+        }
+      }
+    },
+    "prompt_snapshot_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hex digest of the canonicalized prompt(s) that drove this run. Lets a reviewer prove two runs had identical prompt preconditions."
+    },
+    "tool_schemas_snapshot_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hex digest of the canonicalized list of tool schemas available to the agent at run start. Lets a reviewer prove two runs had identical tool surfaces."
+    },
+    "determinism": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Reproducibility knobs in effect for this run. Absence means the run was not pinned for determinism.",
+      "properties": {
+        "seed": {"type": "integer", "description": "Sampler seed if pinned."},
+        "temperature": {"type": "number", "minimum": 0, "description": "Sampler temperature."},
+        "top_p": {"type": "number", "minimum": 0, "maximum": 1, "description": "Sampler nucleus parameter."}
+      }
+    },
+    "checkpoint_ref": {
+      "type": "string",
+      "description": "Opaque reference (path or URI) to a serialized RunState/checkpoint that could resume this run."
+    },
+    "sandbox_image_ref": {
+      "type": "string",
+      "description": "Opaque reference (path or URI or image digest) to a frozen sandbox image associated with this run."
+    },
+    "gate_results_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Rollup of gate-check outcomes for this run. Detailed per-gate records live in events[] with kind=gate_check.",
+      "properties": {
+        "gates_passed": {"type": "array", "items": {"type": "string"}, "description": "Names of gates that passed."},
+        "gates_failed": {"type": "array", "items": {"type": "string"}, "description": "Names of gates that failed."},
+        "all_passed": {"type": "boolean", "description": "True iff gates_failed is empty."}
+      }
+    }
+  }
+}
