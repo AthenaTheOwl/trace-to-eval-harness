@@ -7,7 +7,7 @@ event logs. Each `*.packet.json` validates against
 ## Anchors
 
 - Source-of-truth Run schema: amended in
-  [`DEC-CDCP-011`](https://github.com/AthenaTheOwl/athena-site/blob/main/decisions/DEC-CDCP-011-run-schema-carries-replay-equivalence-fields.md)
+  [`DEC-CDCP-011`](https://github.com/AthenaTheOwl/athena-site/blob/main/decisions/DEC-CDCP-011-run-records-carry-replay-equivalence-evidence.md)
   on athena-site; carries the six replay-equivalence fields the packets
   exercise.
 - Review-boundary packet contract: fixed in
@@ -27,11 +27,11 @@ through a producer-side DEC.
 
 | Packet | Source repo | Run id | Generated | What the Run captured | Producer DEC |
 |---|---|---|---|---|---|
-| [`run-cb524eb06115.packet.json`](./run-cb524eb06115.packet.json) | procurement-negotiation-lab | `run-cb524eb06115` | 2026-05-27 | Factory pipeline run (eight-event ledger; TypeScript emitter) | [`DEC-FACTORY-007`](https://github.com/AthenaTheOwl/procurement-negotiation-lab/blob/main/decisions/DEC-FACTORY-007-factory-emits-conformant-run-evidence.md) |
+| [`run-cb524eb06115.packet.json`](./run-cb524eb06115.packet.json) | procurement-negotiation-lab | `run-cb524eb06115` | 2026-05-27 | Factory pipeline run (eight-event ledger; Python emitter) | [`DEC-FACTORY-007`](https://github.com/AthenaTheOwl/procurement-negotiation-lab/blob/main/decisions/DEC-FACTORY-007-factory-emits-conformant-run-evidence.md) |
 | [`run-13f2a48fe8bc.packet.json`](./run-13f2a48fe8bc.packet.json) | supplier-risk-rag-agent | `run-13f2a48fe8bc` | 2026-05-27 | Eval suite run with refusal-precision gate (four-event ledger; Python emitter) | [`DEC-EVL-006`](https://github.com/AthenaTheOwl/supplier-risk-rag-agent/blob/main/decisions/DEC-EVL-006-eval-runner-emits-conformant-run-evidence.md) |
-| [`run-27338e664be4.packet.json`](./run-27338e664be4.packet.json) | ai-field-brief | `run-27338e664be4` | 2026-05-27 | Brief publish (W20 backfill; three-event ledger; TypeScript emitter) | [`DEC-PUB-005`](https://github.com/AthenaTheOwl/ai-field-brief/blob/main/decisions/DEC-PUB-005-brief-emits-conformant-run-evidence.md) |
-| [`run-5cd81663b4f4.packet.json`](./run-5cd81663b4f4.packet.json) | ai-field-brief | `run-5cd81663b4f4` | 2026-05-27 | Brief publish (W21 backfill; three-event ledger; TypeScript emitter) | [`DEC-PUB-005`](https://github.com/AthenaTheOwl/ai-field-brief/blob/main/decisions/DEC-PUB-005-brief-emits-conformant-run-evidence.md) |
-| [`run-e28b70344597.packet.json`](./run-e28b70344597.packet.json) | ai-field-brief | `run-e28b70344597` | 2026-05-27 | Brief publish (W22 backfill; three-event ledger; TypeScript emitter) | [`DEC-PUB-005`](https://github.com/AthenaTheOwl/ai-field-brief/blob/main/decisions/DEC-PUB-005-brief-emits-conformant-run-evidence.md) |
+| [`run-27338e664be4.packet.json`](./run-27338e664be4.packet.json) | ai-field-brief | `run-27338e664be4` | 2026-05-27 | Brief publish (W20 backfill; three-event ledger; Python emitter) | [`DEC-PUB-005`](https://github.com/AthenaTheOwl/ai-field-brief/blob/main/decisions/DEC-PUB-005-brief-emits-conformant-run-evidence.md) |
+| [`run-5cd81663b4f4.packet.json`](./run-5cd81663b4f4.packet.json) | ai-field-brief | `run-5cd81663b4f4` | 2026-05-27 | Brief publish (W21 backfill; three-event ledger; Python emitter) | [`DEC-PUB-005`](https://github.com/AthenaTheOwl/ai-field-brief/blob/main/decisions/DEC-PUB-005-brief-emits-conformant-run-evidence.md) |
+| [`run-e28b70344597.packet.json`](./run-e28b70344597.packet.json) | ai-field-brief | `run-e28b70344597` | 2026-05-27 | Brief publish (W22 backfill; three-event ledger; Python emitter) | [`DEC-PUB-005`](https://github.com/AthenaTheOwl/ai-field-brief/blob/main/decisions/DEC-PUB-005-brief-emits-conformant-run-evidence.md) |
 | [`run-efeb29900de3.packet.json`](./run-efeb29900de3.packet.json) | chip-supply-chain-map | `run-efeb29900de3` | 2026-05-27 | Watchlist data refresh export (eight-event ledger; TypeScript emitter) | [`DEC-FIN-003`](https://github.com/AthenaTheOwl/chip-supply-chain-map/blob/main/decisions/DEC-FIN-003-watchlist-export-emits-conformant-run-evidence.md) |
 
 ## How to regenerate
