@@ -53,6 +53,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     evidence_cdcp.add_argument("path", type=Path)
     evidence_cdcp.add_argument("--out", type=Path, required=True)
+    evidence_cdcp.add_argument(
+        "--run-record",
+        type=Path,
+        default=None,
+        help=(
+            "explicit path to the producer Run record JSON. "
+            "Default: auto-discover at <event-log>/../run-records/<run_id>.json."
+        ),
+    )
 
     run = subparsers.add_parser("run", help="run eval cases against trace JSON files")
     run.add_argument("eval_cases", type=Path)
@@ -116,7 +125,11 @@ def main(argv: list[str] | None = None) -> int:
             output_path = args.out
             if output_path.suffix == "":
                 output_path = output_path / EVIDENCE_OUTPUT_FILENAME
-            result = write_run_evidence_from_cdcp_events(args.path, output_path)
+            result = write_run_evidence_from_cdcp_events(
+                args.path,
+                output_path,
+                run_record_path=args.run_record,
+            )
             for error in result.line_errors:
                 print(
                     f"warning: skipped {error.source_path}:{error.line_number}: {error.message}",

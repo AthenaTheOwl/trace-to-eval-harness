@@ -11,6 +11,13 @@ from .validation import validate_document
 
 OUTPUT_FILENAME = "run_evidence.json"
 DEFAULT_GENERATED_AT = "1970-01-01T00:00:00Z"
+SCHEMA_VERSION = "2.0.0"
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+class RunRecordError(ValueError):
+    """Raised when the producer Run record cannot be located, read, or matched."""
 
 
 @dataclass(frozen=True)
@@ -85,18 +92,23 @@ def _as_list(value: Any) -> list[Any]:
     return [value]
 
 
-def _sha256(path: Path) -> str:
+def _sha256_path(path: Path) -> str:
     digest = hashlib.sha256()
     digest.update(path.read_bytes())
     return f"sha256:{digest.hexdigest()}"
 
 
-def _packet_hash(files: list[Path]) -> str:
-    digest = hashlib.sha256()
-    for path in files:
-        digest.update(path.as_posix().encode("utf-8"))
-        digest.update(path.read_bytes())
-    return digest.hexdigest()[:12]
+def _sha256_bytes_hex(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def canonical_run_record_bytes(record: dict[str, Any]) -> bytes:
+    """Canonicalize a Run record for hashing.
+
+    Rule: json.dumps with sort_keys=True, indent=2, ensure_ascii=False,
+    then UTF-8 encode. Deterministic for any same-content record.
+    """
+    return json.dumps(record, sort_keys=True, indent=2, ensure_ascii=False).encode("utf-8")
 
 
 def _latest_created_at(events: list[CdcpEvent]) -> str:
@@ -378,18 +390,164 @@ def _dedupe(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return deduped
 
 
-def build_run_evidence_from_cdcp_events(path: Path) -> tuple[dict[str, Any], int, list[JsonLineError]]:
+def _events_run_id(events: list[CdcpEvent]) -> str | None:
+    """Return the shared run_id across events, or None if events disagree or are missing it."""
+    seen: set[str] = set()
+    for event in events:
+        run_id = event.payload.get("run_id") or _payload(event.payload).get("run_id")
+        if isinstance(run_id, str) and run_id:
+            seen.add(run_id)
+    if not seen:
+        return None
+    if len(seen) > 1:
+        raise RunRecordError(
+            f"event log carries conflicting run_id values: {sorted(seen)} "
+            f"(producer bug — every event in a ledger should share one run_id)"
+        )
+    return next(iter(seen))
+
+
+def _auto_discover_run_record(event_log_path: Path, run_id: str) -> Path:
+    """Default convention: <event_log>.parent.parent / 'run-records' / '<run_id>.json'."""
+    return event_log_path.resolve().parent.parent / "run-records" / f"{run_id}.json"
+
+
+def _load_run_record(
+    event_log_path: Path,
+    events: list[CdcpEvent],
+    run_record_override: Path | None,
+) -> tuple[dict[str, Any], Path]:
+    """Locate and load the producer Run record. Raises RunRecordError on failure."""
+    events_run_id = _events_run_id(events)
+    if run_record_override is not None:
+        candidate = run_record_override
+        if not candidate.is_file():
+            raise RunRecordError(
+                f"Run record not found at explicit --run-record path: {candidate}. "
+                f"Check the path and try again."
+            )
+    else:
+        if events_run_id is None:
+            raise RunRecordError(
+                f"could not auto-discover Run record from {event_log_path}: "
+                f"no run_id field found on any event. "
+                f"Pass --run-record <path> explicitly."
+            )
+        candidate = _auto_discover_run_record(event_log_path, events_run_id)
+        if not candidate.is_file():
+            raise RunRecordError(
+                f"Run record auto-discovery failed: no file at {candidate}. "
+                f"Expected convention is <event-log>/../run-records/<run_id>.json. "
+                f"Pass --run-record <path> to override."
+            )
+    try:
+        record = json.loads(candidate.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise RunRecordError(
+            f"Run record at {candidate} is not valid JSON: {exc}"
+        ) from exc
+    if not isinstance(record, dict):
+        raise RunRecordError(
+            f"Run record at {candidate} did not parse as a JSON object"
+        )
+    record_id = record.get("id")
+    if not isinstance(record_id, str) or not record_id:
+        raise RunRecordError(
+            f"Run record at {candidate} is missing a non-empty 'id' field"
+        )
+    if events_run_id is not None and record_id != events_run_id:
+        raise RunRecordError(
+            f"Run record id {record_id!r} does not match event log run_id "
+            f"{events_run_id!r} (producer bug — Run record and ledger must agree)"
+        )
+    return record, candidate
+
+
+def _relative_to_repo(path: Path) -> str:
+    """Return path relative to REPO_ROOT when possible, else POSIX-form absolute."""
+    try:
+        return path.resolve().relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        # Path is outside the repo (e.g. a sibling product repo on the same disk).
+        try:
+            rel = Path(path).resolve().relative_to(REPO_ROOT.parent)
+            return ("../" + rel.as_posix()) if not rel.as_posix().startswith("..") else rel.as_posix()
+        except ValueError:
+            return path.resolve().as_posix()
+
+
+def _resolve_artifact_path(repo_root_for_artifact: Path, ref: str) -> Path | None:
+    candidate = repo_root_for_artifact / ref
+    if candidate.is_file():
+        return candidate
+    return None
+
+
+def _producer_repo_root(run_record_path: Path) -> Path:
+    """The producer repo root: ops/run-records/<id>.json -> repo root is .parent.parent.parent."""
+    return run_record_path.resolve().parent.parent.parent
+
+
+def _build_artifact_refs_and_hashes(
+    record: dict[str, Any], run_record_path: Path
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    outputs = record.get("outputs")
+    if not isinstance(outputs, list):
+        return [], []
+    producer_root = _producer_repo_root(run_record_path)
+    refs: list[dict[str, Any]] = []
+    hashes: list[dict[str, Any]] = []
+    for output in outputs:
+        if not isinstance(output, dict):
+            continue
+        artifact_id = output.get("artifact_id")
+        kind = output.get("type") or "artifact"
+        if not isinstance(artifact_id, str) or not artifact_id:
+            continue
+        entry: dict[str, Any] = {
+            "kind": str(kind),
+            "ref": artifact_id,
+            "artifact_id": artifact_id,
+        }
+        refs.append(entry)
+        resolved = _resolve_artifact_path(producer_root, artifact_id)
+        if resolved is not None:
+            try:
+                digest = _sha256_bytes_hex(resolved.read_bytes())
+                hashes.append({"ref": artifact_id, "hash": digest})
+            except OSError:
+                pass
+    return refs, hashes
+
+
+def build_run_evidence_from_cdcp_events(
+    path: Path,
+    *,
+    run_record_path: Path | None = None,
+) -> tuple[dict[str, Any], int, list[JsonLineError]]:
     files = discover_event_log_files(path)
     events, line_errors = parse_event_logs(path)
     input_refs = [
         {
             "kind": "event-log",
             "uri": file.as_posix(),
-            "hash": _sha256(file),
+            "hash": _sha256_path(file),
             "description": "CDCP event log input",
         }
         for file in files
     ]
+
+    # Pick the canonical source ledger path used for hashing + ref. When the
+    # caller pointed at a single file this is unambiguous; when they pointed
+    # at a directory we use the first discovered file.
+    primary_event_log = files[0] if files else path
+
+    record, located_record_path = _load_run_record(
+        primary_event_log, events, run_record_path
+    )
+    producer_run_id = record["id"]
+    run_record_hash = _sha256_bytes_hex(canonical_run_record_bytes(record))
+    event_log_hash = _sha256_bytes_hex(primary_event_log.read_bytes())
 
     gate_results: list[dict[str, Any]] = []
     policy_decisions: list[dict[str, Any]] = []
@@ -415,9 +573,18 @@ def build_run_evidence_from_cdcp_events(path: Path) -> tuple[dict[str, Any], int
         trace_refs.extend(_trace_refs(event))
         rollback_refs.extend(_rollback_refs(event))
 
-    packet = {
-        "schema_version": "1.0.0",
-        "run_id": f"cdcp-{_packet_hash(files)}",
+    artifact_refs, artifact_hashes = _build_artifact_refs_and_hashes(
+        record, located_record_path
+    )
+
+    packet: dict[str, Any] = {
+        "schema_version": SCHEMA_VERSION,
+        "run_id": producer_run_id,
+        "producer_run_id": producer_run_id,
+        "run_record_ref": _relative_to_repo(located_record_path),
+        "run_record_hash": run_record_hash,
+        "event_log_ref": _relative_to_repo(primary_event_log),
+        "event_log_hash": event_log_hash,
         "generated_at": _latest_created_at(events),
         "runtime_provider": "cdcp-event-log",
         "model": None,
@@ -432,15 +599,39 @@ def build_run_evidence_from_cdcp_events(path: Path) -> tuple[dict[str, Any], int
         "trace_refs": _dedupe(trace_refs),
         "rollback_refs": _dedupe(rollback_refs),
         "notes": [
-            "Generated from explicit CDCP event-log fields only.",
-            "RunState or runtime snapshot data can be attached later as input refs.",
+            "Generated from CDCP event log + producer Run record; refs and "
+            "hashes preserve provenance.",
         ],
     }
+
+    # Pass-through replay-equivalence fields when present on the Run record.
+    prompt_hash = record.get("prompt_snapshot_hash")
+    if isinstance(prompt_hash, str) and prompt_hash:
+        packet["prompt_snapshot_hash"] = prompt_hash
+    tool_hash = record.get("tool_schemas_snapshot_hash")
+    if isinstance(tool_hash, str) and tool_hash:
+        packet["tool_schemas_snapshot_hash"] = tool_hash
+    sandbox_ref = record.get("sandbox_image_ref")
+    if isinstance(sandbox_ref, str) and sandbox_ref:
+        packet["sandbox_image_ref"] = sandbox_ref
+
+    if artifact_refs:
+        packet["artifact_refs"] = artifact_refs
+    if artifact_hashes:
+        packet["artifact_hashes"] = artifact_hashes
+
     return packet, len(events), line_errors
 
 
-def write_run_evidence_from_cdcp_events(path: Path, out_path: Path) -> RunEvidenceResult:
-    packet, events_read, line_errors = build_run_evidence_from_cdcp_events(path)
+def write_run_evidence_from_cdcp_events(
+    path: Path,
+    out_path: Path,
+    *,
+    run_record_path: Path | None = None,
+) -> RunEvidenceResult:
+    packet, events_read, line_errors = build_run_evidence_from_cdcp_events(
+        path, run_record_path=run_record_path
+    )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(packet, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     validation = validate_document("evidence", out_path)
