@@ -13,12 +13,14 @@ VALID_FIXTURES = [
     ("trace", ROOT / "tests" / "fixtures" / "valid" / "trace.json"),
     ("eval", ROOT / "tests" / "fixtures" / "valid" / "eval_cases.yaml"),
     ("report", ROOT / "tests" / "fixtures" / "valid" / "run_report.json"),
+    ("evidence", ROOT / "tests" / "fixtures" / "valid" / "run_evidence.json"),
 ]
 
 INVALID_FIXTURES = [
     ("trace", ROOT / "tests" / "fixtures" / "invalid" / "trace_missing_output.json"),
     ("eval", ROOT / "tests" / "fixtures" / "invalid" / "eval_cases_unknown_check.yaml"),
     ("report", ROOT / "tests" / "fixtures" / "invalid" / "run_report_bad_count.json"),
+    ("evidence", ROOT / "tests" / "fixtures" / "invalid" / "run_evidence_missing_refs.json"),
 ]
 
 
@@ -43,6 +45,7 @@ def test_current_examples_match_published_schemas() -> None:
     assert validate_document("eval", ROOT / "examples" / "eval_cases.yaml").passed
     assert validate_document("eval", ROOT / "eval_cases" / "generated.yaml").passed
     assert validate_document("report", ROOT / "reports" / "run.json").passed
+    assert validate_document("evidence", ROOT / "tests" / "fixtures" / "valid" / "run_evidence.json").passed
 
 
 def test_validate_command_accepts_valid_fixture(capsys: pytest.CaptureFixture[str]) -> None:

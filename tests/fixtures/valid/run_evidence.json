@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "cdcp-7c96b31f08d4",
+  "generated_at": "2026-05-25T23:30:00Z",
+  "runtime_provider": "cdcp-event-log",
+  "model": null,
+  "input_refs": [
+    {
+      "kind": "event-log",
+      "uri": "tests/fixtures/cdcp_events/event-log/2026-05-25.jsonl",
+      "hash": "sha256:fixture",
+      "description": "CDCP event log fixture"
+    }
+  ],
+  "tool_calls": [
+    {
+      "name": "run_shell",
+      "server": "local-shell",
+      "decision": "approval-required",
+      "source_event_id": "evt-tool"
+    }
+  ],
+  "mcp_servers": [
+    {
+      "name": "local-shell",
+      "decision": "approval-required",
+      "risk": "high",
+      "source_event_id": "evt-tool"
+    }
+  ],
+  "policy_decisions": [
+    {
+      "subject": "local-shell.run_shell",
+      "decision": "human_approval_required",
+      "policy_id": "POL-MCP-001",
+      "reason": "shell commands require approval",
+      "source_event_id": "evt-policy"
+    }
+  ],
+  "approval_events": [
+    {
+      "subject": "local-shell.run_shell",
+      "status": "requested",
+      "actor": "engineering.code-reviewer",
+      "source_event_id": "evt-approval"
+    }
+  ],
+  "artifact_diffs": [
+    {
+      "path": "reports/run.json",
+      "change_type": "modified",
+      "source_event_id": "evt-diff"
+    }
+  ],
+  "gate_results": [
+    {
+      "name": "voice_lint",
+      "status": "passed",
+      "summary": "voice-lint clean",
+      "source_event_id": "evt-gate"
+    }
+  ],
+  "cost_usage": {
+    "input_tokens": 1000,
+    "output_tokens": 250,
+    "total_tokens": 1250,
+    "estimated_cost_usd": 0.01
+  },
+  "trace_refs": [
+    {
+      "kind": "trace",
+      "uri": "examples/traces/bad_citation.json",
+      "hash": null,
+      "description": "Failed trace promoted into an eval case"
+    }
+  ],
+  "rollback_refs": [
+    {
+      "kind": "git",
+      "uri": "commit:abc123",
+      "hash": null,
+      "description": "Rollback commit"
+    }
+  ],
+  "notes": [
+    "RunState alone is resumability; this packet records the surrounding proof."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "cdcp-missing-inputs",
+  "generated_at": "2026-05-25T23:30:00Z",
+  "runtime_provider": "cdcp-event-log",
+  "input_refs": [],
+  "tool_calls": [],
+  "mcp_servers": [],
+  "policy_decisions": [],
+  "approval_events": [],
+  "artifact_diffs": [],
+  "gate_results": [],
+  "trace_refs": [],
+  "rollback_refs": []
+}

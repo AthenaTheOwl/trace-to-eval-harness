@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trace-to-eval.dev/schemas/v1/run-evidence.schema.json",
+  "title": "Run Evidence Packet",
+  "version": "1.0.0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "generated_at",
+    "runtime_provider",
+    "input_refs",
+    "tool_calls",
+    "mcp_servers",
+    "policy_decisions",
+    "approval_events",
+    "artifact_diffs",
+    "gate_results",
+    "trace_refs",
+    "rollback_refs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "runtime_provider": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": ["string", "null"] }
+      }
+    },
+    "input_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/ref" }
+    },
+    "tool_calls": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tool_call" }
+    },
+    "mcp_servers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/mcp_server" }
+    },
+    "policy_decisions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/policy_decision" }
+    },
+    "approval_events": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/approval_event" }
+    },
+    "artifact_diffs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifact_diff" }
+    },
+    "gate_results": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/gate_result" }
+    },
+    "cost_usage": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "input_tokens": { "$ref": "#/$defs/non_negative_number" },
+        "output_tokens": { "$ref": "#/$defs/non_negative_number" },
+        "total_tokens": { "$ref": "#/$defs/non_negative_number" },
+        "estimated_cost_usd": { "$ref": "#/$defs/non_negative_number" }
+      }
+    },
+    "trace_refs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ref" }
+    },
+    "rollback_refs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ref" }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "non_negative_number": {
+      "type": "number",
+      "minimum": 0
+    },
+    "ref": {
+      "type": "object",
+      "required": ["kind", "uri"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "uri": { "type": "string", "minLength": 1 },
+        "hash": { "type": ["string", "null"] },
+        "description": { "type": ["string", "null"] }
+      }
+    },
+    "tool_call": {
+      "type": "object",
+      "required": ["name", "decision"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "server": { "type": ["string", "null"] },
+        "decision": {
+          "type": "string",
+          "enum": ["allowed", "denied", "approval-required", "unknown"]
+        },
+        "source_event_id": { "type": ["string", "null"] }
+      }
+    },
+    "mcp_server": {
+      "type": "object",
+      "required": ["name", "decision"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "decision": {
+          "type": "string",
+          "enum": ["allowed", "denied", "approval-required", "unknown"]
+        },
+        "risk": {
+          "type": ["string", "null"],
+          "enum": ["low", "medium", "high", "critical", "unknown", null]
+        },
+        "source_event_id": { "type": ["string", "null"] }
+      }
+    },
+    "policy_decision": {
+      "type": "object",
+      "required": ["subject", "decision"],
+      "additionalProperties": false,
+      "properties": {
+        "subject": { "type": "string", "minLength": 1 },
+        "decision": {
+          "type": "string",
+          "enum": ["allow", "deny", "human_approval_required", "unknown"]
+        },
+        "policy_id": { "type": ["string", "null"] },
+        "reason": { "type": ["string", "null"] },
+        "source_event_id": { "type": ["string", "null"] }
+      }
+    },
+    "approval_event": {
+      "type": "object",
+      "required": ["subject", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "subject": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["requested", "approved", "rejected", "expired", "unknown"]
+        },
+        "actor": { "type": ["string", "null"] },
+        "source_event_id": { "type": ["string", "null"] }
+      }
+    },
+    "artifact_diff": {
+      "type": "object",
+      "required": ["path", "change_type"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "change_type": {
+          "type": "string",
+          "enum": ["added", "modified", "deleted", "renamed", "unknown"]
+        },
+        "source_event_id": { "type": ["string", "null"] }
+      }
+    },
+    "gate_result": {
+      "type": "object",
+      "required": ["name", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["passed", "failed", "warn", "skipped", "unknown"]
+        },
+        "summary": { "type": ["string", "null"] },
+        "source_event_id": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

@@ -17,6 +17,8 @@ Trace-To-Eval Harness turns a failed AI trace into a checked-in eval case. You f
 python -m pip install -e .[dev]
 python -m trace_to_eval ingest examples/traces/bad_citation.json --out eval_cases/generated.yaml
 python -m trace_to_eval from-cdcp-events ../portfolio-repo/ops/event-log --out eval_cases/cdcp
+python -m trace_to_eval evidence from-cdcp-events ../portfolio-repo/ops/event-log --out reports/run_evidence.json
+python -m trace_to_eval evidence validate reports/run_evidence.json
 python -m trace_to_eval validate trace examples/traces/bad_citation.json
 python -m trace_to_eval validate eval examples/eval_cases.yaml
 python -m trace_to_eval run examples/eval_cases.yaml --traces examples/traces --out reports/run.json
@@ -78,6 +80,17 @@ Validate any checked-in report with:
 
 ```powershell
 python -m trace_to_eval validate report reports/run.json
+```
+
+Run evidence packets record what surrounded an agent or factory run:
+inputs, tool and MCP surfaces, policy decisions, approval events,
+artifact diffs, gate results, trace refs, and rollback refs. The
+published schema is `schemas/run-evidence.schema.json` with id
+`https://trace-to-eval.dev/schemas/v1/run-evidence.schema.json`.
+
+```powershell
+python -m trace_to_eval evidence from-cdcp-events ../ai-field-brief/ops/event-log --out reports/run_evidence.json
+python -m trace_to_eval evidence validate reports/run_evidence.json
 ```
 
 ## Local Gates

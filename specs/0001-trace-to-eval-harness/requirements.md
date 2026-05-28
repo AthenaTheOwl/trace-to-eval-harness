@@ -28,6 +28,13 @@ map failed gate, review finding, or incident events with explicit
 trace payloads into draft eval cases that require human review before
 promotion.
 
+### R-TTE-007: Run evidence packet
+
+The CLI must generate and validate a run evidence packet that records
+run inputs, tool calls, MCP surfaces, policy decisions, approvals,
+artifact diffs, gate results, trace refs, and rollback refs. The packet
+is evidence for review and CI; it is not the source of truth.
+
 ### R-TTE-SCHEMA-001: Published schemas
 
 The repo must publish JSON Schemas for trace, eval case, and run report shapes under `schemas/`.
@@ -43,3 +50,8 @@ Each published schema must carry `$id` and `version`, and the repo must include 
 ### R-TTE-SCHEMA-004: Deterministic first gate
 
 Schema validation and deterministic checks must stay as the first gate before any later LLM judge integration.
+
+### R-TTE-SCHEMA-005: Run evidence schema
+
+The repo must publish a JSON Schema for run evidence packets and
+include positive and negative fixtures for validation.
