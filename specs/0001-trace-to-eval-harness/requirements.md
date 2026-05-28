@@ -35,6 +35,38 @@ run inputs, tool calls, MCP surfaces, policy decisions, approvals,
 artifact diffs, gate results, trace refs, and rollback refs. The packet
 is evidence for review and CI; it is not the source of truth.
 
+### R-TTE-008: Producer identity preserved
+
+Run evidence packets must preserve the producing Run record's `id`
+as `producer_run_id` and use the same value for the top-level `run_id`
+field. The generator must not synthesize substitute identifiers.
+
+### R-TTE-009: Run record and event log ingested with provenance hashes
+
+The generator must locate the producer Run record alongside the event
+log (default convention: `<event-log>/../run-records/<run_id>.json`,
+overridable via `--run-record`), record both refs in the packet, and
+carry a SHA-256 hash for each: the Run record hashed under a fixed
+canonicalization rule (json.dumps with `sort_keys=True`, `indent=2`,
+`ensure_ascii=False`, then UTF-8 encode), the event log hashed as raw
+bytes. Missing or mismatched Run records must fail the generator
+loudly.
+
+### R-TTE-010: Artifact refs and replay-equivalence pass-through
+
+When the Run record carries `outputs[]`, the packet must surface them
+as `artifact_refs` (best-effort `artifact_hashes` when refs resolve to
+on-disk paths). When the Run record carries `prompt_snapshot_hash`,
+`tool_schemas_snapshot_hash`, or `sandbox_image_ref`, the packet must
+carry the same values through unchanged.
+
+### R-TTE-011: Deterministic provenance hashes
+
+Both `run_record_hash` and `event_log_hash` must be deterministic for
+identical inputs: hashing the same Run record twice (even with keys
+reordered) must produce identical hex, and hashing the same event log
+bytes must produce identical hex.
+
 ### R-TTE-SCHEMA-001: Published schemas
 
 The repo must publish JSON Schemas for trace, eval case, and run report shapes under `schemas/`.
