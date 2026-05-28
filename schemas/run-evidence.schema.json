@@ -1,12 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://trace-to-eval.dev/schemas/v1/run-evidence.schema.json",
+  "$id": "https://trace-to-eval.dev/schemas/v2/run-evidence.schema.json",
   "title": "Run Evidence Packet",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "object",
   "required": [
     "schema_version",
     "run_id",
+    "producer_run_id",
+    "run_record_ref",
+    "run_record_hash",
+    "event_log_ref",
+    "event_log_hash",
     "generated_at",
     "runtime_provider",
     "input_refs",
@@ -23,11 +28,90 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.0.0"
+      "const": "2.0.0"
     },
     "run_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "Run identifier carried in the packet body. In v2 this equals producer_run_id; no synthesis."
+    },
+    "producer_run_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The run_id from the producer's emitted Run record. Always preserved from source; never synthesized."
+    },
+    "run_record_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path (or repo:// URI in a future round) pointing at the producer's Run record JSON."
+    },
+    "run_record_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hex digest of the canonicalized Run record bytes (json.dumps with sort_keys=True, indent=2, ensure_ascii=False, then UTF-8 encode)."
+    },
+    "event_log_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path (or repo:// URI in a future round) pointing at the source event ledger JSONL."
+    },
+    "event_log_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hex digest of the raw event log bytes (read in binary, hashed directly — no normalization, since the ledger is append-only)."
+    },
+    "prompt_snapshot_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Replay-equivalence hash cloned from producer Run record. Lets a packet consumer prove preconditions match a specific run without rehashing prompts."
+    },
+    "tool_schemas_snapshot_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Replay-equivalence hash cloned from producer Run record."
+    },
+    "sandbox_image_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Sandbox/worktree reference cloned from producer Run record. Carries the commit SHA the run executed under."
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "ref"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Artifact kind tag (e.g. brief, packet, watchlist_risk_packet, eval_report)."
+          },
+          "ref": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Path or URI pointing at the artifact."
+          },
+          "artifact_id": {
+            "type": "string",
+            "description": "Optional id from the Run record's outputs[]."
+          }
+        }
+      },
+      "description": "Artifacts the producing run wrote. Sourced from Run.outputs[]; consumers can resolve refs to inspect outputs."
+    },
+    "artifact_hashes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ref", "hash"],
+        "additionalProperties": false,
+        "properties": {
+          "ref": { "type": "string", "minLength": 1 },
+          "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        }
+      },
+      "description": "SHA-256 hashes per artifact ref. Resolves artifact_refs that point at on-disk paths; entries are omitted when the ref is unresolvable from this repo."
     },
     "generated_at": {
       "type": "string",
