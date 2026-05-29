@@ -117,7 +117,21 @@
         "target": {"type": "string", "description": "Path of the memory file the update would land in."},
         "patch": {"type": "string", "description": "Proposed text change or diff."},
         "evidence": {"$ref": "#/$defs/evidence_array"},
-        "human_review_required": {"type": "boolean", "default": true, "description": "Whether a human must approve before this memory update lands. Default true."}
+        "human_review_required": {"type": "boolean", "default": true, "description": "Whether a human must approve before this memory update lands. Default true."},
+        "systems_map": {"type": "string", "minLength": 10, "description": "Per DEC-CDCP-020. Optional during bootstrap."},
+        "transferable_principle": {"type": "string", "minLength": 10, "description": "Per DEC-CDCP-020. Optional during bootstrap."},
+        "falsification_test": {"type": "string", "minLength": 10, "description": "Per DEC-CDCP-020. Optional during bootstrap."},
+        "adoption_ladder": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per DEC-CDCP-020. Optional during bootstrap.",
+          "properties": {
+            "minimum_viable": { "type": "string" },
+            "mid_adoption": { "type": "string" },
+            "full_adoption": { "type": "string" },
+            "monitoring_signals": { "type": "array", "items": { "type": "string" } }
+          }
+        }
       }
     },
     "test_generation": {
@@ -130,7 +144,21 @@
         "spec_id": {"type": "string", "description": "Spec the generated test covers."},
         "test_path": {"type": "string", "description": "Path of the proposed test file."},
         "evidence": {"$ref": "#/$defs/evidence_array"},
-        "human_review_required": {"type": "boolean", "default": true, "description": "Whether a human must review before the test is added to CI. Default true."}
+        "human_review_required": {"type": "boolean", "default": true, "description": "Whether a human must review before the test is added to CI. Default true."},
+        "systems_map": {"type": "string", "minLength": 10, "description": "Per DEC-CDCP-020. Optional during bootstrap."},
+        "transferable_principle": {"type": "string", "minLength": 10, "description": "Per DEC-CDCP-020. Optional during bootstrap."},
+        "falsification_test": {"type": "string", "minLength": 10, "description": "Per DEC-CDCP-020. Optional during bootstrap."},
+        "adoption_ladder": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per DEC-CDCP-020. Optional during bootstrap.",
+          "properties": {
+            "minimum_viable": { "type": "string" },
+            "mid_adoption": { "type": "string" },
+            "full_adoption": { "type": "string" },
+            "monitoring_signals": { "type": "array", "items": { "type": "string" } }
+          }
+        }
       }
     },
     "skill_patch": {
@@ -143,7 +171,21 @@
         "skill_id": {"type": "string", "description": "Id of the skill being patched."},
         "patch": {"type": "string", "description": "Proposed change to instructions, scripts, or eval set."},
         "evidence": {"$ref": "#/$defs/evidence_array"},
-        "human_review_required": {"type": "boolean", "default": true, "description": "Whether a human must approve the patch. Default true."}
+        "human_review_required": {"type": "boolean", "default": true, "description": "Whether a human must approve the patch. Default true."},
+        "systems_map": {"type": "string", "minLength": 10, "description": "Per DEC-CDCP-020. Optional during bootstrap."},
+        "transferable_principle": {"type": "string", "minLength": 10, "description": "Per DEC-CDCP-020. Optional during bootstrap."},
+        "falsification_test": {"type": "string", "minLength": 10, "description": "Per DEC-CDCP-020. Optional during bootstrap."},
+        "adoption_ladder": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per DEC-CDCP-020. Optional during bootstrap.",
+          "properties": {
+            "minimum_viable": { "type": "string" },
+            "mid_adoption": { "type": "string" },
+            "full_adoption": { "type": "string" },
+            "monitoring_signals": { "type": "array", "items": { "type": "string" } }
+          }
+        }
       }
     },
     "backlog_item": {
@@ -156,7 +198,21 @@
         "title": {"type": "string", "description": "Short title for the proposed work."},
         "rationale": {"type": "string", "description": "Why the work matters, grounded in the evidence."},
         "evidence": {"$ref": "#/$defs/evidence_array"},
-        "human_review_required": {"type": "boolean", "default": true, "description": "Whether a human must triage before this becomes a tracked item. Default true."}
+        "human_review_required": {"type": "boolean", "default": true, "description": "Whether a human must triage before this becomes a tracked item. Default true."},
+        "systems_map": {"type": "string", "minLength": 10, "description": "Per DEC-CDCP-020. Optional during bootstrap."},
+        "transferable_principle": {"type": "string", "minLength": 10, "description": "Per DEC-CDCP-020. Optional during bootstrap."},
+        "falsification_test": {"type": "string", "minLength": 10, "description": "Per DEC-CDCP-020. Optional during bootstrap."},
+        "adoption_ladder": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per DEC-CDCP-020. Optional during bootstrap.",
+          "properties": {
+            "minimum_viable": { "type": "string" },
+            "mid_adoption": { "type": "string" },
+            "full_adoption": { "type": "string" },
+            "monitoring_signals": { "type": "array", "items": { "type": "string" } }
+          }
+        }
       }
     }
   }

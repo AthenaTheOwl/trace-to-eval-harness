@@ -159,6 +159,32 @@
         "gates_failed": {"type": "array", "items": {"type": "string"}, "description": "Names of gates that failed."},
         "all_passed": {"type": "boolean", "description": "True iff gates_failed is empty."}
       }
+    },
+    "systems_map": {
+      "type": "string",
+      "minLength": 10,
+      "description": "What underlying system or mechanism does this run expose or change? Names the systemic pattern, not just the local concern. Recommended for substantive runs; see DEC-CDCP-020 for the discipline."
+    },
+    "transferable_principle": {
+      "type": "string",
+      "minLength": 10,
+      "description": "What generalizes beyond this specific run? Names the principle that applies in other contexts or repos. Recommended; see DEC-CDCP-020."
+    },
+    "falsification_test": {
+      "type": "string",
+      "minLength": 10,
+      "description": "What observation or experiment would prove this run's claims wrong? Names the empirical condition that would invalidate the run. Recommended; see DEC-CDCP-020."
+    },
+    "adoption_ladder": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Stepwise adoption from minimum viable to full, with monitoring signals at each step. Recommended; see DEC-CDCP-020.",
+      "properties": {
+        "minimum_viable": { "type": "string" },
+        "mid_adoption": { "type": "string" },
+        "full_adoption": { "type": "string" },
+        "monitoring_signals": { "type": "array", "items": { "type": "string" } }
+      }
     }
   }
 }

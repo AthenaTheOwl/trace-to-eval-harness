@@ -118,6 +118,32 @@
       "type": "string",
       "pattern": "^DEC-[A-Z]+-[0-9]{3,}-[a-z][a-z0-9-]*$",
       "description": "Id of a newer DEC that replaces this one. Set when status becomes superseded."
+    },
+    "systems_map": {
+      "type": "string",
+      "minLength": 10,
+      "description": "What underlying system or mechanism does this decision expose or change? Names the systemic pattern, not just the local concern. Recommended for any DEC with Status: approved; see DEC-CDCP-020 for the discipline."
+    },
+    "transferable_principle": {
+      "type": "string",
+      "minLength": 10,
+      "description": "What generalizes beyond this specific decision? Names the principle that applies in other contexts or repos. Recommended for any DEC with Status: approved."
+    },
+    "falsification_test": {
+      "type": "string",
+      "minLength": 10,
+      "description": "What observation or experiment would prove this decision wrong? Names the empirical condition that would invalidate the decision. Recommended for any DEC with Status: approved."
+    },
+    "adoption_ladder": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Stepwise adoption from minimum viable to full, with monitoring signals at each step. Recommended for any DEC with Status: approved.",
+      "properties": {
+        "minimum_viable": { "type": "string" },
+        "mid_adoption": { "type": "string" },
+        "full_adoption": { "type": "string" },
+        "monitoring_signals": { "type": "array", "items": { "type": "string" } }
+      }
     }
   }
 }
