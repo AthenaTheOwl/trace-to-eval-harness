@@ -67,6 +67,37 @@ identical inputs: hashing the same Run record twice (even with keys
 reordered) must produce identical hex, and hashing the same event log
 bytes must produce identical hex.
 
+### R-TTE-012: URI-bearing ref fields resolve through portfolio_root
+
+The packet generator must accept `repo://<repo>@<sha>/<path>` and
+`artifact://<repo>/<id>` URIs in every ref field it reads from a
+producer Run record or event ledger (`sandbox_image_ref`,
+`Run.inputs[].ref`, `Run.outputs[].artifact_id`). The generator must
+resolve `repo://` URIs to local paths under a configurable
+`portfolio_root` (CLI flag `--portfolio-root`, env var
+`PORTFOLIO_ROOT`, default = this repo's parent directory) before
+opening files for hashing. `artifact://` URIs are opaque and must not
+be opened as files; the generator omits them from `artifact_hashes`.
+
+### R-TTE-013: Packet schema v2.1 ref patterns accept URI or path
+
+The run-evidence schema's ref fields (`run_record_ref`,
+`event_log_ref`, `sandbox_image_ref`, `artifact_refs[].ref`) must use
+an `anyOf` clause that accepts the URI pattern AND a free-form path
+pattern. The version + `$id` must bump together when the contract
+shifts (2.0.0 / v2 -> 2.1.0 / v2-1 for this change).
+
+### R-TTE-014: Producer URIs pass through unchanged
+
+When the producer Run record carries a `repo://` `sandbox_image_ref`,
+the generator must emit `run_record_ref` and `event_log_ref` as
+`repo://<repo>@<sha>/ops/run-records/<id>.json` and
+`repo://<repo>@<sha>/ops/event-ledger/<file>.jsonl` so packets are
+portable across machines. `artifact_refs[].ref` must pass through
+verbatim from `Run.outputs[].artifact_id`. Legacy producers
+(no `repo://` `sandbox_image_ref`) keep getting portfolio-relative
+posix paths.
+
 ### R-TTE-SCHEMA-001: Published schemas
 
 The repo must publish JSON Schemas for trace, eval case, and run report shapes under `schemas/`.
