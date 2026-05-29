@@ -90,6 +90,49 @@ rollback: |
   from disk. The pieces are additive: removing them leaves
   DEC-TTE-009 and DEC-TTE-010 untouched.
 owner: science.eval_curator
+systems_map: |
+  Three layered hardening moves on the same evidence chain:
+  property tests sweep the parser grammar (grammar-level
+  correctness), validate-chain collapses four CI assertions into one
+  named end-to-end check (pipeline-level coherence), audit log
+  records usage signals (operational-level observability). Together
+  they answer "does the contract hold," "does the contract run,"
+  and "is anyone running the contract."
+transferable_principle: |
+  Any contract chain should be hardened in three planes:
+  grammar (property tests over the parser/validator), pipeline
+  (a single command that runs the full chain and names the failing
+  stage), and observability (a usage log so the contract surface is
+  inspectable in production). Curated tests + four separate CI
+  steps + zero usage signal is the brittle baseline.
+falsification_test: |
+  If a Hypothesis run with `--max-examples=10000` finds a URI input
+  the regex parses but the round-trip identity does not hold for —
+  or a malformed URI that the parser accepts — the grammar-level
+  hardening is falsified. If `validate-chain` reports OK on a
+  ledger whose packet downstream review rejects, the
+  pipeline-level hardening is falsified. If the audit log shows
+  zero invocations of `validate-chain` over 60 days, the
+  observability claim is falsified.
+adoption_ladder:
+  minimum_viable: |
+    Property tests in `tests/test_uri_properties.py`;
+    `validate-chain` subcommand ships; audit log appends on
+    success of two named commands.
+  mid_adoption: |
+    Property tests extended to cover the run-evidence packet
+    schema (not just URIs); `validate-chain --json` machine output
+    consumed by an external dashboard; `audit summary --since`
+    surfaces weekly usage trends.
+  full_adoption: |
+    Property tests cover every schema in `ops/schemas-cache/`;
+    `validate-chain` is the only CI gate (the four pre-existing
+    steps deprecate); audit log feeds a portfolio-wide
+    "evidence-chain usage" gauge in athena-site.
+  monitoring_signals:
+    - Hypothesis falsification count (must stay 0 over rolling 30 days)
+    - validate-chain pass/fail ratio per week
+    - audit log invocation count per command per week
 ---
 
 ## decision

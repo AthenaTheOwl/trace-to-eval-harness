@@ -78,6 +78,45 @@ rollback: |
   detection branch (URIs only flow through when the producer emits
   them), so the rollback path is bounded.
 owner: science.eval_curator
+systems_map: |
+  Producer-consumer URI contract across the CDCP portfolio. Producers
+  emit content-addressed refs (`repo://<repo>@<sha>/<path>`) and
+  opaque artifact refs (`artifact://<repo>/<id>`); the consumer-side
+  resolver (this repo's `trace_to_eval/uri.py`) parses both, opens
+  the repo URIs through a configurable `portfolio_root`, and skips
+  artifact URIs as opaque. The same pattern applies to any
+  cross-repo consumer that has to read producer evidence at a
+  pinned commit.
+transferable_principle: |
+  Any cross-repo evidence pipeline needs a content-addressed ref
+  scheme (commit-pinned for files, opaque for logical artifacts)
+  plus a consumer-side resolver that defaults to local checkout
+  but accepts a portfolio_root override. Schema-level `anyOf`
+  acceptance of both URI and path forms keeps interop with legacy
+  emitters while marking the URI form as preferred.
+falsification_test: |
+  If a Round 6 producer ledger that emits `repo://` URIs in
+  `sandbox_image_ref` causes the packet generator to either crash,
+  silently write missing hashes, or open the URI as a relative path,
+  the resolver contract is falsified. Equivalently: if two consumer
+  repos resolve the same `repo://` URI to different bytes given the
+  same portfolio_root, the content-addressing claim is falsified.
+adoption_ladder:
+  minimum_viable: |
+    Resolver in `trace_to_eval/uri.py`; schema bumps to v2.1.0 with
+    `anyOf` ref patterns; example packets regenerated.
+  mid_adoption: |
+    `--portfolio-root` CLI flag wired through every command that
+    reads a Run record; `PORTFOLIO_ROOT` env var documented;
+    cross-repo example ledger added under `tests/fixtures/`.
+  full_adoption: |
+    Every consumer repo in the portfolio reads URIs through the
+    same resolver shape; path-form refs deprecated in Round 7;
+    schema bumps to v3 with URI-only ref patterns.
+  monitoring_signals:
+    - URI-vs-path ref ratio in shipped packets (tracked per release)
+    - resolver-failure exit code count per CI run
+    - cross-repo packet portability (replay-equivalence across machines)
 ---
 
 ## decision

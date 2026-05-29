@@ -73,6 +73,44 @@ rollback: |
   the new workflow file is additive and the spec_check.py change is a
   one-line range bump.
 owner: science.eval_curator
+systems_map: |
+  CI as the enforcement boundary for cross-repo contracts. The
+  DEC-CDCP-015 contract names the gates; the per-repo workflow file
+  binds those gates to GitHub Actions check names; PR check status
+  becomes the single observable that says "this contract held on
+  this commit." The producer-vs-consumer split in the contract maps
+  onto distinct gate subsets per repo role.
+transferable_principle: |
+  Cross-repo contracts hold only if a named CI check per gate
+  blocks merge on failure. A non-blocking gate is a documentation
+  artifact, not a contract. Per-repo workflow files named after the
+  contract (not after the repo) make the contract mapping legible
+  from one place — the Actions tab.
+falsification_test: |
+  If a PR that violates the run-evidence chain (corrupted example
+  packet, broken URI resolver, missing schema cache) merges to main
+  without the run-evidence-gates workflow failing, the contract
+  binding is falsified. Equivalently: if a gate that was supposed to
+  fail passes because of `continue-on-error: true` or a similar
+  marker, the enforcement claim is falsified.
+adoption_ladder:
+  minimum_viable: |
+    `run-evidence-gates.yml` workflow exists; runs the two
+    consumer-side gates (example-packet validation, URI resolver
+    tests); triggers on PR + push to main.
+  mid_adoption: |
+    Workflow status badge in README; PR check name pinned in
+    branch-protection rules; gate failures linked to the DEC-CDCP-015
+    gate id in the workflow output.
+  full_adoption: |
+    All product repos in the portfolio publish their
+    role-appropriate `run-evidence-gates.yml`; the portfolio
+    manifest in athena-site lists every repo's bound gates; a
+    portfolio-status check aggregates green/red across repos.
+  monitoring_signals:
+    - run-evidence-gates pass/fail rate over rolling 30 days
+    - continue-on-error scan exit code (must stay 0)
+    - drift between athena-site portfolio-manifest gate list and per-repo workflow
 ---
 
 ## decision
