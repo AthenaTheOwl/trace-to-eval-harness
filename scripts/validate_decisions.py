@@ -104,6 +104,34 @@ def parse_front_matter(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     return data, None
 
 
+SYSTEMS_THINKING_FIELDS = (
+    "systems_map",
+    "transferable_principle",
+    "falsification_test",
+    "adoption_ladder",
+)
+
+
+def systems_thinking_warnings(data: dict[str, Any], rel: str) -> list[str]:
+    """Per DEC-CDCP-020: warn (do not fail) on missing four-field discipline.
+
+    Applies only to DECs with status == "approved" so draft / superseded
+    records are exempt. The warning ratchets to a hard failure after
+    30 days via an amendment DEC.
+    """
+    status = data.get("status")
+    if status != "approved":
+        return []
+    missing = [field for field in SYSTEMS_THINKING_FIELDS if field not in data]
+    if not missing:
+        return []
+    joined = ", ".join(missing)
+    return [
+        f"{rel}: WARNING: missing systems-thinking field(s) per DEC-CDCP-020: "
+        f"{joined}"
+    ]
+
+
 def discover_decisions() -> list[Path]:
     if not DECISIONS_DIR.is_dir():
         return []
@@ -134,6 +162,7 @@ def main() -> int:
         return 0
 
     violations: list[str] = []
+    warnings: list[str] = []
     for dec_path in decisions:
         rel = dec_path.relative_to(ROOT).as_posix()
         data, err = parse_front_matter(dec_path)
@@ -154,6 +183,16 @@ def main() -> int:
         for err_obj in errors:
             location = "/".join(str(part) for part in err_obj.absolute_path) or "<root>"
             violations.append(f"{rel}: {location}: {err_obj.message}")
+        warnings.extend(systems_thinking_warnings(data, rel))
+
+    if warnings:
+        print(
+            "validate_decisions: systems-thinking discipline warnings "
+            "(non-blocking; ratchets per DEC-CDCP-020):",
+            file=sys.stderr,
+        )
+        for w in warnings:
+            print(f"  - {w}", file=sys.stderr)
 
     if violations:
         print("validate_decisions: violations found", file=sys.stderr)

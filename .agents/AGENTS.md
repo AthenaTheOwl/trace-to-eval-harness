@@ -4,6 +4,26 @@ The single contract a coding agent (Claude, Codex, or other) reads
 before acting on this repo. Specs name what we build. Decisions name
 why. This file names how the agent behaves while building.
 
+## Systems-thinking discipline (per DEC-CDCP-020)
+
+Per `DEC-CDCP-020` in athena-site, every substantive DEC, dream
+candidate, and Run record in this repo SHOULD carry four fields:
+
+- `systems_map`: what underlying mechanism does this expose?
+- `transferable_principle`: what generalizes beyond this decision?
+- `falsification_test`: what would prove this wrong?
+- `adoption_ladder`: `minimum_viable` -> `mid_adoption` ->
+  `full_adoption` plus `monitoring_signals`.
+
+All four fields are optional in the schema. `validate_decisions.py`
+emits a warning to stderr when a new DEC with `status: approved` is
+missing any of them; exit code stays 0. After 30 days, the warning
+ratchets to a hard failure via amendment DEC.
+
+For pure-design choices where a falsification test does not apply,
+set the field to `"Pure-design choice; falsification test not
+applicable."` rather than leaving it blank.
+
 ## Coding style
 
 - Python 3.11. Install with `python -m pip install -e ".[dev]"`.
