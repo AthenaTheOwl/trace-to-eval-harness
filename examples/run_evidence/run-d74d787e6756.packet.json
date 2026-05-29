@@ -1,0 +1,143 @@
+{
+  "approval_events": [
+    {
+      "actor": null,
+      "source_event_id": "88fa83ca-a3e9-47b7-bfe2-d3dc943c06e0",
+      "status": "unknown",
+      "subject": "pipeline.complete"
+    }
+  ],
+  "artifact_diffs": [],
+  "artifact_hashes": [
+    {
+      "hash": "fb9a737c8d770ccf869153fbc2f3c16d0660fb6776cec6f1d2d2867c482d2318",
+      "ref": "repo://ai-field-brief@f2291a447f39e4b4347b2be08fd43491feddfbc1/briefs/2026-W20/brief.md"
+    },
+    {
+      "hash": "88f04beabf9cc6305d7c30465da19cc7371703b10e926cbb5232d8d61723ad8e",
+      "ref": "repo://ai-field-brief@f2291a447f39e4b4347b2be08fd43491feddfbc1/briefs/2026-W20/meta.yaml"
+    }
+  ],
+  "artifact_refs": [
+    {
+      "artifact_id": "repo://ai-field-brief@f2291a447f39e4b4347b2be08fd43491feddfbc1/briefs/2026-W20/brief.md",
+      "kind": "brief",
+      "ref": "repo://ai-field-brief@f2291a447f39e4b4347b2be08fd43491feddfbc1/briefs/2026-W20/brief.md"
+    },
+    {
+      "artifact_id": "repo://ai-field-brief@f2291a447f39e4b4347b2be08fd43491feddfbc1/briefs/2026-W20/meta.yaml",
+      "kind": "meta",
+      "ref": "repo://ai-field-brief@f2291a447f39e4b4347b2be08fd43491feddfbc1/briefs/2026-W20/meta.yaml"
+    }
+  ],
+  "cost_usage": null,
+  "event_log_hash": "ae7d127775137a1c796be766397c985f1a518a1805812e8e344fca114e10299d",
+  "event_log_ref": "repo://ai-field-brief@f2291a447f39e4b4347b2be08fd43491feddfbc1/ops/event-ledger/run-d74d787e6756.jsonl",
+  "gate_results": [
+    {
+      "name": "voice_lint",
+      "source_event_id": "b144329a-f541-4292-ad78-a37eeb60c428",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "spec_check",
+      "source_event_id": "5793bcc6-8639-44ad-a8b4-c9f7185aaa01",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "check_no_bom",
+      "source_event_id": "b5afd7f3-d622-46ff-bcad-ee7710909fc4",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_schemas",
+      "source_event_id": "442b685f-aaed-4bec-b34b-6f657e3a0502",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_registry",
+      "source_event_id": "6ef79d27-ac01-4f32-b213-05f0b570c300",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_decisions",
+      "source_event_id": "1fd2404e-941c-4dab-82e9-1edf7491c35a",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_roles",
+      "source_event_id": "7c85d77c-b74a-4ab9-859f-9311b4457047",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_tools",
+      "source_event_id": "a29dfa28-c1f6-48db-9ca8-a85700a834ca",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_policies",
+      "source_event_id": "7c18d4e4-6988-4d8c-8fd3-5b4d00f66033",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_skills",
+      "source_event_id": "8230cc70-7f0c-4f45-92a6-d57dc189ce5a",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "validate_dreams",
+      "source_event_id": "692efbfa-2304-4f84-bdb0-fe47b7f05464",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "check_schema_cache_freshness",
+      "source_event_id": "ac061a90-b845-4add-a5f3-a6879c47af37",
+      "status": "passed",
+      "summary": null
+    },
+    {
+      "name": "gate.run.evidence_recorded",
+      "source_event_id": "ba6c672c-00c7-4f4e-bead-f0b1c0bda2ec",
+      "status": "unknown",
+      "summary": null
+    }
+  ],
+  "generated_at": "2026-05-29T12:28:08Z",
+  "input_refs": [
+    {
+      "description": "CDCP event log input",
+      "hash": "sha256:ae7d127775137a1c796be766397c985f1a518a1805812e8e344fca114e10299d",
+      "kind": "event-log",
+      "uri": "E:/claude_code/random-apps/ai-field-brief/ops/event-ledger/run-d74d787e6756.jsonl"
+    }
+  ],
+  "mcp_servers": [],
+  "model": null,
+  "notes": [
+    "Generated from CDCP event log + producer Run record; refs and hashes preserve provenance."
+  ],
+  "policy_decisions": [],
+  "producer_run_id": "run-d74d787e6756",
+  "prompt_snapshot_hash": "b0f549651e7d4d23907038bf53d431ba2d2db4a3a4172ef56b0e5fb9cd25fcf7",
+  "rollback_refs": [],
+  "run_id": "run-d74d787e6756",
+  "run_record_hash": "c91318162876c41336d23cc6011d824a3f2b6db39bc86e0c8f3ce46fe0fc20fe",
+  "run_record_ref": "repo://ai-field-brief@f2291a447f39e4b4347b2be08fd43491feddfbc1/ops/run-records/run-d74d787e6756.json",
+  "runtime_provider": "cdcp-event-log",
+  "sandbox_image_ref": "repo://ai-field-brief@f2291a447f39e4b4347b2be08fd43491feddfbc1/",
+  "schema_version": "2.1.0",
+  "tool_calls": [],
+  "tool_schemas_snapshot_hash": "32b4ee1bba905ea25e36325eca2240c3ebdc83c928663fe287e03c2bc36d0501",
+  "trace_refs": []
+}
