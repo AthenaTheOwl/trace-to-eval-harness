@@ -1,0 +1,25 @@
+{
+  "agent_id": "test-fixture-agent",
+  "finished_at": "2026-05-29T12:00:04Z",
+  "gate_results_summary": {
+    "all_passed": false,
+    "gates_failed": ["spec_check"],
+    "gates_passed": ["voice_lint"]
+  },
+  "id": "run-chain00000a",
+  "inputs": [
+    {
+      "kind": "trace",
+      "ref": "examples/traces/missing_citation.json"
+    }
+  ],
+  "outputs": [],
+  "prompt_snapshot_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+  "runtime": "test-fixture-runtime",
+  "sandbox_image_ref": "test://fixture@cafebabe00000000000000000000000000000000",
+  "spec_id": "specs/0001-trace-to-eval-harness/",
+  "started_at": "2026-05-29T12:00:00Z",
+  "status": "failed",
+  "tool_schemas_snapshot_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+  "workspace_id": "trace-to-eval-harness"
+}

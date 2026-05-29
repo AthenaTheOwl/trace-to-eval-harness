@@ -1,0 +1,2 @@
+{"timestamp":"2026-05-29T12:00:00+00:00","command":"evidence.from-cdcp-events","ledger_path":"ops/event-log/2026-05-29.jsonl","run_id":"run-example0001","result":"ok","packet_hash":null}
+{"timestamp":"2026-05-29T12:01:00+00:00","command":"validate-chain","ledger_path":"ops/event-log/2026-05-29.jsonl","run_id":"run-example0001","result":"ok","packet_hash":"0000000000000000000000000000000000000000000000000000000000000000"}

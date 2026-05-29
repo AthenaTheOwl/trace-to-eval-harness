@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 import sys
 
+from .audit import AUDIT_LOG_DEFAULT, append_audit_entry, format_summary, summarize
 from .cdcp_events import import_cdcp_events
 from .ingest import ingest_trace
 from .report import write_reports
 from .run_evidence import OUTPUT_FILENAME as EVIDENCE_OUTPUT_FILENAME
 from .run_evidence import write_run_evidence_from_cdcp_events
 from .runner import run_eval_file
+from .validate_chain import ChainValidationError, run_validate_chain
 from .validation import schema_kinds, validate_document
 
 
@@ -91,6 +94,69 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="override the schema directory for testing or local schema drafts",
     )
+
+    validate_chain = subparsers.add_parser(
+        "validate-chain",
+        help=(
+            "run the full DEC-CDCP-015 chain: validate events, generate packet, "
+            "validate packet, then cross-check Run record vs. ledger"
+        ),
+    )
+    validate_chain.add_argument("ledger_path", type=Path)
+    validate_chain.add_argument(
+        "--run-record",
+        type=str,
+        default=None,
+        help=(
+            "explicit path or repo:// URI to the producer Run record. "
+            "Default: auto-discover at <ledger>/../run-records/<run_id>.json."
+        ),
+    )
+    validate_chain.add_argument(
+        "--portfolio-root",
+        type=Path,
+        default=None,
+        help="portfolio root for resolving repo:// URIs (default: PORTFOLIO_ROOT env var or repo parent).",
+    )
+    validate_chain.add_argument(
+        "--audit-log",
+        type=Path,
+        default=AUDIT_LOG_DEFAULT,
+        help="path to the audit log file (default: ops/audit-log.jsonl).",
+    )
+    validate_chain.add_argument(
+        "--no-audit",
+        action="store_true",
+        help="suppress the audit-log append on success.",
+    )
+
+    audit = subparsers.add_parser(
+        "audit",
+        help="inspect the trace-to-eval CLI audit log",
+    )
+    audit_subparsers = audit.add_subparsers(dest="audit_command", required=True)
+    audit_summary = audit_subparsers.add_parser(
+        "summary",
+        help="aggregate the audit log into a usage summary",
+    )
+    audit_summary.add_argument(
+        "--log-path",
+        type=Path,
+        default=AUDIT_LOG_DEFAULT,
+        help="path to the audit log file (default: ops/audit-log.jsonl).",
+    )
+    audit_summary.add_argument(
+        "--since",
+        type=str,
+        default=None,
+        help="filter entries with timestamp >= --since (YYYY-MM-DD or RFC 3339).",
+    )
+    audit_summary.add_argument(
+        "--top",
+        type=int,
+        default=5,
+        help="how many top ledger paths to show (default: 5).",
+    )
     return parser
 
 
@@ -156,6 +222,12 @@ def main(argv: list[str] | None = None) -> int:
                     f"skipped {len(result.line_errors)} malformed JSONL line(s)",
                     file=sys.stderr,
                 )
+            append_audit_entry(
+                command="evidence.from-cdcp-events",
+                ledger_path=str(args.path),
+                run_id=result.packet.get("run_id"),
+                result="ok",
+            )
             return 0
 
         if args.evidence_command == "validate":
@@ -210,6 +282,41 @@ def main(argv: list[str] | None = None) -> int:
             for issue in result.issues:
                 print(f"  - {issue.location}: {issue.message}", file=sys.stderr)
         return 1 if failed else 0
+
+    if args.command == "validate-chain":
+        try:
+            chain = run_validate_chain(
+                args.ledger_path,
+                run_record_path=args.run_record,
+                portfolio_root=args.portfolio_root,
+            )
+        except ChainValidationError as exc:
+            print(f"FAIL: {exc.stage}", file=sys.stderr)
+            print(f"  reason: {exc.message}", file=sys.stderr)
+            return 1
+        summary = chain.to_summary()
+        print("OK validate-chain")
+        print(json.dumps(summary, indent=2, sort_keys=True))
+        if not args.no_audit:
+            append_audit_entry(
+                command="validate-chain",
+                ledger_path=str(args.ledger_path),
+                run_id=chain.run_id,
+                result="ok",
+                packet_hash=chain.packet_hash,
+                log_path=args.audit_log,
+            )
+        return 0
+
+    if args.command == "audit":
+        if args.audit_command == "summary":
+            summary = summarize(
+                log_path=args.log_path,
+                since=args.since,
+                top_n=args.top,
+            )
+            print(format_summary(summary))
+            return 0
 
     parser.error("unknown command")
     return 2

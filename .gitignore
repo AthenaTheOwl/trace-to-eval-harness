@@ -5,4 +5,5 @@ __pycache__/
 .venv/
 *.egg-info/
 .coverage
+ops/audit-log.jsonl
 
