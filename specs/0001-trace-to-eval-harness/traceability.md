@@ -20,6 +20,10 @@
 | R-TTE-016 | owner_role: science.eval_curator | `.github/workflows/run-evidence-gates.yml` (job `consumer-gates`, step `all-example-packets-validate`), `examples/run_evidence/` |
 | R-TTE-017 | owner_role: science.eval_curator | `.github/workflows/run-evidence-gates.yml` (job `consumer-gates`, step `uri-resolver-tests`), `tests/test_uri.py`, `tests/test_run_evidence.py` |
 | R-TTE-018 | owner_role: science.eval_curator | `.github/workflows/run-evidence-gates.yml`, `decisions/DEC-TTE-010-trace-to-eval-harness-ci-enforces-run-evidence-chain.md` |
+| R-TTE-019 | owner_role: science.eval_curator | `tests/test_uri_properties.py`, `trace_to_eval/uri.py`, `decisions/DEC-TTE-011-uri-parser-property-tests-and-validate-chain.md` |
+| R-TTE-020 | owner_role: science.eval_curator | `trace_to_eval/validate_chain.py`, `trace_to_eval/cli.py`, `tests/test_validate_chain.py`, `tests/fixtures/validate_chain/` |
+| R-TTE-021 | owner_role: science.eval_curator | `trace_to_eval/audit.py`, `trace_to_eval/cli.py`, `tests/test_audit.py`, `ops/audit-log.example.jsonl`, `.gitignore` |
+| R-TTE-022 | owner_role: science.eval_curator | `trace_to_eval/audit.py` (`summarize`, `format_summary`), `trace_to_eval/cli.py`, `tests/test_audit.py` |
 | R-TTE-SCHEMA-001 | owner_role: engineering.implementation | `schemas/trace.schema.json`, `schemas/eval-case.schema.json`, `schemas/run-report.schema.json` |
 | R-TTE-SCHEMA-002 | owner_role: engineering.implementation | `trace_to_eval/cli.py`, `trace_to_eval/validation.py`, `tests/test_validation.py` |
 | R-TTE-SCHEMA-003 | owner_role: science.proof_gate_runner | `tests/fixtures/valid/`, `tests/fixtures/invalid/`, `scripts/validate_schemas.py` |

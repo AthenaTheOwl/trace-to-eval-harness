@@ -129,6 +129,46 @@ No step in `.github/workflows/run-evidence-gates.yml` may carry
 a contract gate informational. Every gate in the DEC-CDCP-015
 contract that applies to this repo must block the build on failure.
 
+### R-TTE-019: URI parser property tests
+
+The repo must publish Hypothesis-driven property tests for the URI
+parser at `tests/test_uri_properties.py`. Tests must sweep the
+`repo://` and `artifact://` grammars: every well-formed URI must
+round-trip through `parse_repo_uri` and `parse_artifact_uri`, and
+every documented malformed input (short SHA, long SHA, missing `@`,
+missing path slash, uppercase repo, empty repo, digit-leading repo)
+must reject deterministically.
+
+### R-TTE-020: validate-chain subcommand exists
+
+The CLI must expose `trace-to-eval validate-chain <ledger>` which
+runs the full DEC-CDCP-015 chain in one shot: validate every event
+against the cached `event.schema.json`, locate the producer Run
+record (auto-discovery or `--run-record` override), regenerate the
+packet via the existing pipeline, re-validate the packet against
+`run-evidence.schema.json`, then run four cross-checks
+(`prompt_snapshot_hash`, `tool_schemas_snapshot_hash`,
+`gate_results_summary`, `fields_populated`) across packet, Run
+record, and ledger. The OK path prints a JSON summary; the FAIL
+path names the failing stage.
+
+### R-TTE-021: Audit log appends on success
+
+The CLI must append a structured JSONL entry to `ops/audit-log.jsonl`
+on every successful invocation of `evidence from-cdcp-events` and
+`validate-chain`. Each entry must carry `timestamp`, `command`,
+`ledger_path`, `run_id`, `result`, and `packet_hash` keys (any
+unused field may be null). The log file is gitignored;
+`ops/audit-log.example.jsonl` is checked in as a shape reference.
+
+### R-TTE-022: audit summary subcommand aggregates the log
+
+The CLI must expose `trace-to-eval audit summary` which reads the
+audit log and prints aggregate stats: total invocations, breakdown
+by command, breakdown by result, and the top N ledger paths by
+invocation count. A `--since YYYY-MM-DD` flag must filter entries by
+timestamp.
+
 ### R-TTE-SCHEMA-001: Published schemas
 
 The repo must publish JSON Schemas for trace, eval case, and run report shapes under `schemas/`.
