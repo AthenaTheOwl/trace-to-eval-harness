@@ -34,7 +34,7 @@ def test_cdcp_events_build_schema_valid_run_evidence() -> None:
     # v2: producer identity preserved, no more cdcp-{hash} synthesis.
     assert packet["run_id"] == "run-fixture000a"
     assert packet["producer_run_id"] == "run-fixture000a"
-    assert packet["schema_version"] == "2.0.0"
+    assert packet["schema_version"] == "2.1.0"
     assert packet["input_refs"][0]["kind"] == "event-log"
 
     # Run-record + event-log refs and hashes are populated.
@@ -124,7 +124,7 @@ def test_evidence_from_cdcp_events_cli_writes_valid_packet(tmp_path, capsys) -> 
     assert validate_document("evidence", out_file).passed
 
     packet = json.loads(out_file.read_text(encoding="utf-8"))
-    assert packet["schema_version"] == "2.0.0"
+    assert packet["schema_version"] == "2.1.0"
     assert packet["producer_run_id"] == "run-fixture000a"
     assert packet["gate_results"][0]["status"] == "failed"
 
@@ -284,3 +284,196 @@ def test_run_record_with_artifact_outputs_resolves_hashes(tmp_path: Path) -> Non
     hashes = {entry["ref"]: entry["hash"] for entry in packet.get("artifact_hashes", [])}
     # Only the resolvable file is hashed; the missing one is omitted.
     assert hashes == {"briefs/hello.md": expected_artifact_hash}
+
+
+# --- Phase 3 (Round 6): repo:// + artifact:// URI handling -------------------
+
+_TEST_SHA = "f2291a447f39e4b4347b2be08fd43491feddfbc1"
+
+
+def _build_producer_repo_with_uri_record(
+    portfolio_root: Path, repo_name: str, run_id: str, outputs: list[dict] | None = None
+) -> Path:
+    """Build a synthetic producer repo whose Run record carries repo:// URIs.
+
+    Returns the event-log path so the test can invoke the generator.
+    """
+    producer_root = portfolio_root / repo_name
+    (producer_root / "ops" / "event-ledger").mkdir(parents=True)
+    (producer_root / "ops" / "run-records").mkdir(parents=True)
+    event_log = producer_root / "ops" / "event-ledger" / f"{run_id}.jsonl"
+    event_log.write_text(
+        f'{{"type":"gate.passed","run_id":"{run_id}","payload":{{}},'
+        f'"created_at":"2026-05-29T00:00:00Z"}}\n',
+        encoding="utf-8",
+    )
+    record = {
+        "id": run_id,
+        "agent_id": "test",
+        "runtime": "test",
+        "workspace_id": repo_name,
+        "started_at": "2026-05-29T00:00:00Z",
+        "status": "done",
+        "spec_id": "test",
+        "sandbox_image_ref": f"repo://{repo_name}@{_TEST_SHA}/",
+        "inputs": [
+            {"kind": "playbook", "ref": f"repo://{repo_name}@{_TEST_SHA}/playbook.md"}
+        ],
+        "outputs": outputs if outputs is not None else [],
+    }
+    (producer_root / "ops" / "run-records" / f"{run_id}.json").write_text(
+        json.dumps(record, indent=2), encoding="utf-8"
+    )
+    return event_log
+
+
+def test_generator_emits_repo_uri_refs_when_sandbox_is_repo_uri(tmp_path: Path) -> None:
+    """When Run.sandbox_image_ref is repo://, packet refs are repo:// too."""
+    portfolio_root = tmp_path / "portfolio"
+    portfolio_root.mkdir()
+    event_log = _build_producer_repo_with_uri_record(
+        portfolio_root, "demo-repo", "run-uri00000001"
+    )
+
+    packet, _, _ = build_run_evidence_from_cdcp_events(
+        event_log, portfolio_root=portfolio_root
+    )
+    assert packet["run_record_ref"] == (
+        f"repo://demo-repo@{_TEST_SHA}/ops/run-records/run-uri00000001.json"
+    )
+    assert packet["event_log_ref"] == (
+        f"repo://demo-repo@{_TEST_SHA}/ops/event-ledger/run-uri00000001.jsonl"
+    )
+    assert packet["sandbox_image_ref"] == f"repo://demo-repo@{_TEST_SHA}/"
+
+
+def test_generator_resolves_repo_uri_artifact_outputs(tmp_path: Path) -> None:
+    """artifact_id repo:// URIs resolve under portfolio_root and produce hashes."""
+    portfolio_root = tmp_path / "portfolio"
+    portfolio_root.mkdir()
+    # Create the brief file the artifact_id points at.
+    (portfolio_root / "demo-repo" / "briefs" / "2026-W22").mkdir(parents=True)
+    brief_path = portfolio_root / "demo-repo" / "briefs" / "2026-W22" / "brief.md"
+    brief_bytes = b"# brief\n"
+    brief_path.write_bytes(brief_bytes)
+    expected_hash = hashlib.sha256(brief_bytes).hexdigest()
+
+    artifact_uri = f"repo://demo-repo@{_TEST_SHA}/briefs/2026-W22/brief.md"
+    opaque_uri = "artifact://demo-repo/watchlist-packet@run-uri00000002"
+    event_log = _build_producer_repo_with_uri_record(
+        portfolio_root,
+        "demo-repo",
+        "run-uri00000002",
+        outputs=[
+            {"artifact_id": artifact_uri, "type": "brief"},
+            {"artifact_id": opaque_uri, "type": "watchlist_risk_packet"},
+        ],
+    )
+
+    packet, _, _ = build_run_evidence_from_cdcp_events(
+        event_log, portfolio_root=portfolio_root
+    )
+    refs = {entry["ref"] for entry in packet["artifact_refs"]}
+    assert refs == {artifact_uri, opaque_uri}
+    # Only the repo:// URI resolves to a file; artifact:// URIs are opaque.
+    hashes = {entry["ref"]: entry["hash"] for entry in packet.get("artifact_hashes", [])}
+    assert hashes == {artifact_uri: expected_hash}
+
+
+def test_generator_falls_back_to_legacy_ref_when_no_repo_uri(tmp_path: Path) -> None:
+    """Legacy producers (no repo:// sandbox_image_ref) still get a path-shaped ref."""
+    producer_root = tmp_path / "legacy-repo"
+    (producer_root / "ops" / "event-ledger").mkdir(parents=True)
+    (producer_root / "ops" / "run-records").mkdir(parents=True)
+    event_log = producer_root / "ops" / "event-ledger" / "run-legacy0001.jsonl"
+    event_log.write_text(
+        '{"type":"gate.passed","run_id":"run-legacy0001","payload":{},'
+        '"created_at":"2026-05-29T00:00:00Z"}\n',
+        encoding="utf-8",
+    )
+    (producer_root / "ops" / "run-records" / "run-legacy0001.json").write_text(
+        json.dumps(
+            {
+                "id": "run-legacy0001",
+                "agent_id": "test",
+                "runtime": "test",
+                "workspace_id": "legacy-repo",
+                "started_at": "2026-05-29T00:00:00Z",
+                "status": "done",
+                "spec_id": "test",
+                # No sandbox_image_ref -> legacy fallback path.
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    packet, _, _ = build_run_evidence_from_cdcp_events(
+        event_log, portfolio_root=tmp_path
+    )
+    # No repo:// scheme; should be a posix path string.
+    assert not packet["run_record_ref"].startswith("repo://")
+    assert not packet["event_log_ref"].startswith("repo://")
+    assert packet["run_record_ref"].endswith("run-legacy0001.json")
+    assert packet["event_log_ref"].endswith("run-legacy0001.jsonl")
+
+
+def test_generator_rejects_malformed_repo_uri_run_record_override(tmp_path: Path) -> None:
+    """A malformed repo:// URI passed as --run-record fails with a clear error."""
+    event_log = tmp_path / "evt.jsonl"
+    event_log.write_text(
+        '{"type":"gate.passed","run_id":"run-xxxxxxxxxx","payload":{},'
+        '"created_at":"2026-05-29T00:00:00Z"}\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(RunRecordError) as excinfo:
+        build_run_evidence_from_cdcp_events(
+            event_log,
+            # Short sha (not 40 hex chars).
+            run_record_path="repo://demo@badsha/ops/run-records/x.json",
+        )
+    assert "repo://" in str(excinfo.value)
+    assert "well-formed" in str(excinfo.value)
+
+
+def test_generator_rejects_artifact_uri_as_run_record_override(tmp_path: Path) -> None:
+    """artifact:// is opaque; it is not a valid run-record path."""
+    event_log = tmp_path / "evt.jsonl"
+    event_log.write_text(
+        '{"type":"gate.passed","run_id":"run-xxxxxxxxxx","payload":{},'
+        '"created_at":"2026-05-29T00:00:00Z"}\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(RunRecordError) as excinfo:
+        build_run_evidence_from_cdcp_events(
+            event_log,
+            run_record_path="artifact://demo/opaque-id",
+        )
+    assert "artifact://" in str(excinfo.value)
+
+
+def test_portfolio_root_cli_flag_overrides_default(tmp_path: Path, capsys) -> None:
+    """The --portfolio-root CLI flag threads through to resolve repo:// URIs."""
+    portfolio_root = tmp_path / "portfolio"
+    portfolio_root.mkdir()
+    event_log = _build_producer_repo_with_uri_record(
+        portfolio_root, "demo-repo", "run-uri00000003"
+    )
+
+    out_file = tmp_path / "packet.json"
+    code = main(
+        [
+            "evidence",
+            "from-cdcp-events",
+            str(event_log),
+            "--out",
+            str(out_file),
+            "--portfolio-root",
+            str(portfolio_root),
+        ]
+    )
+    capsys.readouterr()
+    assert code == 0
+    packet = json.loads(out_file.read_text(encoding="utf-8"))
+    assert packet["run_record_ref"].startswith("repo://demo-repo@")
+    assert packet["event_log_ref"].startswith("repo://demo-repo@")

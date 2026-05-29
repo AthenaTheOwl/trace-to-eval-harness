@@ -2,18 +2,34 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from .cdcp_events import CdcpEvent, JsonLineError, discover_event_log_files, parse_event_logs
+from .uri import parse_repo_uri, resolve_ref
 from .validation import validate_document
 
 OUTPUT_FILENAME = "run_evidence.json"
 DEFAULT_GENERATED_AT = "1970-01-01T00:00:00Z"
-SCHEMA_VERSION = "2.0.0"
+SCHEMA_VERSION = "2.1.0"
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_PORTFOLIO_ROOT = REPO_ROOT.parent
+
+
+def default_portfolio_root() -> Path:
+    """Resolve the default portfolio root.
+
+    Priority:
+      1. ``PORTFOLIO_ROOT`` environment variable (absolute path).
+      2. The parent directory of this repo's root.
+    """
+    override = os.environ.get("PORTFOLIO_ROOT")
+    if override:
+        return Path(override).resolve()
+    return DEFAULT_PORTFOLIO_ROOT
 
 
 class RunRecordError(ValueError):
@@ -415,12 +431,41 @@ def _auto_discover_run_record(event_log_path: Path, run_id: str) -> Path:
 def _load_run_record(
     event_log_path: Path,
     events: list[CdcpEvent],
-    run_record_override: Path | None,
+    run_record_override: Path | str | None,
+    portfolio_root: Path,
 ) -> tuple[dict[str, Any], Path]:
-    """Locate and load the producer Run record. Raises RunRecordError on failure."""
+    """Locate and load the producer Run record. Raises RunRecordError on failure.
+
+    The override may be a local filesystem ``Path``, a legacy path
+    string, or a ``repo://`` URI string. ``artifact://`` URIs are
+    rejected because the Run record must resolve to a JSON file.
+    """
     events_run_id = _events_run_id(events)
     if run_record_override is not None:
-        candidate = run_record_override
+        # Preserve URI form (avoid Windows-mangled "repo:\..." from Path()).
+        if isinstance(run_record_override, Path):
+            override_str = run_record_override.as_posix()
+        else:
+            override_str = str(run_record_override)
+        if override_str.startswith("artifact://"):
+            raise RunRecordError(
+                f"--run-record cannot be an artifact:// URI ({override_str}); "
+                f"the Run record must resolve to a JSON file."
+            )
+        if override_str.startswith("repo://"):
+            parsed = parse_repo_uri(override_str)
+            if parsed is None:
+                raise RunRecordError(
+                    f"--run-record {override_str!r} is not a well-formed repo:// URI"
+                )
+            resolved = resolve_ref(override_str, portfolio_root)
+            if resolved is None:
+                raise RunRecordError(
+                    f"--run-record URI {override_str!r} did not resolve to a path"
+                )
+            candidate = resolved
+        else:
+            candidate = Path(override_str)
         if not candidate.is_file():
             raise RunRecordError(
                 f"Run record not found at explicit --run-record path: {candidate}. "
@@ -476,9 +521,49 @@ def _relative_to_repo(path: Path) -> str:
             return path.resolve().as_posix()
 
 
-def _resolve_artifact_path(repo_root_for_artifact: Path, ref: str) -> Path | None:
-    candidate = repo_root_for_artifact / ref
-    if candidate.is_file():
+def _producer_repo_ref(
+    record: dict[str, Any],
+    file_path: Path,
+    rel_path_under_repo: str,
+    portfolio_root: Path,
+) -> str:
+    """Build a portable ref for a producer-side file.
+
+    When the Run record's ``sandbox_image_ref`` is a ``repo://`` URI,
+    emit ``repo://<repo>@<sha>/<rel_path_under_repo>`` so the packet
+    travels with provenance. Otherwise fall back to a portfolio-relative
+    posix path (interop with legacy producers).
+    """
+    sandbox_ref = record.get("sandbox_image_ref")
+    if isinstance(sandbox_ref, str):
+        parsed = parse_repo_uri(sandbox_ref)
+        if parsed is not None:
+            repo, sha, _path = parsed
+            return f"repo://{repo}@{sha}/{rel_path_under_repo.lstrip('/')}"
+    # Legacy fallback: portfolio-relative posix path.
+    try:
+        return file_path.resolve().relative_to(portfolio_root).as_posix()
+    except ValueError:
+        return _relative_to_repo(file_path)
+
+
+def _resolve_artifact_path(
+    repo_root_for_artifact: Path, ref: str, portfolio_root: Path
+) -> Path | None:
+    """Resolve an artifact ref to a local on-disk path.
+
+    Accepts ``repo://`` URIs (resolved via ``portfolio_root``), legacy
+    relative paths (anchored at ``repo_root_for_artifact``), and absolute
+    paths. ``artifact://`` URIs return None (not a file path).
+    """
+    if ref.startswith("repo://"):
+        candidate = resolve_ref(ref, portfolio_root)
+    elif ref.startswith("artifact://"):
+        return None
+    else:
+        legacy = Path(ref)
+        candidate = legacy if legacy.is_absolute() else repo_root_for_artifact / ref
+    if candidate is not None and candidate.is_file():
         return candidate
     return None
 
@@ -489,7 +574,9 @@ def _producer_repo_root(run_record_path: Path) -> Path:
 
 
 def _build_artifact_refs_and_hashes(
-    record: dict[str, Any], run_record_path: Path
+    record: dict[str, Any],
+    run_record_path: Path,
+    portfolio_root: Path,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     outputs = record.get("outputs")
     if not isinstance(outputs, list):
@@ -510,7 +597,7 @@ def _build_artifact_refs_and_hashes(
             "artifact_id": artifact_id,
         }
         refs.append(entry)
-        resolved = _resolve_artifact_path(producer_root, artifact_id)
+        resolved = _resolve_artifact_path(producer_root, artifact_id, portfolio_root)
         if resolved is not None:
             try:
                 digest = _sha256_bytes_hex(resolved.read_bytes())
@@ -523,8 +610,10 @@ def _build_artifact_refs_and_hashes(
 def build_run_evidence_from_cdcp_events(
     path: Path,
     *,
-    run_record_path: Path | None = None,
+    run_record_path: Path | str | None = None,
+    portfolio_root: Path | None = None,
 ) -> tuple[dict[str, Any], int, list[JsonLineError]]:
+    portfolio_root = (portfolio_root or default_portfolio_root()).resolve()
     files = discover_event_log_files(path)
     events, line_errors = parse_event_logs(path)
     input_refs = [
@@ -543,7 +632,7 @@ def build_run_evidence_from_cdcp_events(
     primary_event_log = files[0] if files else path
 
     record, located_record_path = _load_run_record(
-        primary_event_log, events, run_record_path
+        primary_event_log, events, run_record_path, portfolio_root
     )
     producer_run_id = record["id"]
     run_record_hash = _sha256_bytes_hex(canonical_run_record_bytes(record))
@@ -574,16 +663,27 @@ def build_run_evidence_from_cdcp_events(
         rollback_refs.extend(_rollback_refs(event))
 
     artifact_refs, artifact_hashes = _build_artifact_refs_and_hashes(
-        record, located_record_path
+        record, located_record_path, portfolio_root
+    )
+
+    # Producer-side refs: prefer repo:// URI when the Run record carries a
+    # repo:// sandbox_image_ref (so the packet is portable across machines).
+    run_record_rel = f"ops/run-records/{producer_run_id}.json"
+    event_log_rel = f"ops/event-ledger/{primary_event_log.name}"
+    run_record_ref_str = _producer_repo_ref(
+        record, located_record_path, run_record_rel, portfolio_root
+    )
+    event_log_ref_str = _producer_repo_ref(
+        record, primary_event_log, event_log_rel, portfolio_root
     )
 
     packet: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "run_id": producer_run_id,
         "producer_run_id": producer_run_id,
-        "run_record_ref": _relative_to_repo(located_record_path),
+        "run_record_ref": run_record_ref_str,
         "run_record_hash": run_record_hash,
-        "event_log_ref": _relative_to_repo(primary_event_log),
+        "event_log_ref": event_log_ref_str,
         "event_log_hash": event_log_hash,
         "generated_at": _latest_created_at(events),
         "runtime_provider": "cdcp-event-log",
@@ -627,10 +727,11 @@ def write_run_evidence_from_cdcp_events(
     path: Path,
     out_path: Path,
     *,
-    run_record_path: Path | None = None,
+    run_record_path: Path | str | None = None,
+    portfolio_root: Path | None = None,
 ) -> RunEvidenceResult:
     packet, events_read, line_errors = build_run_evidence_from_cdcp_events(
-        path, run_record_path=run_record_path
+        path, run_record_path=run_record_path, portfolio_root=portfolio_root
     )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(packet, indent=2, sort_keys=True) + "\n", encoding="utf-8")

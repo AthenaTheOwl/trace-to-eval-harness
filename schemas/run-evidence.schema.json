@@ -1,8 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://trace-to-eval.dev/schemas/v2/run-evidence.schema.json",
+  "$id": "https://trace-to-eval.dev/schemas/v2-1/run-evidence.schema.json",
   "title": "Run Evidence Packet",
-  "version": "2.0.0",
+  "version": "2.1.0",
+  "description": "Run evidence packet contract. Schema $id and version are bumped together; minor bumps (2.0 -> 2.1) add optional fields or relax patterns under anyOf; major bumps (2 -> 3) change required field shapes.",
   "type": "object",
   "required": [
     "schema_version",
@@ -28,7 +29,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "2.0.0"
+      "const": "2.1.0"
     },
     "run_id": {
       "type": "string",
@@ -43,7 +44,11 @@
     "run_record_ref": {
       "type": "string",
       "minLength": 1,
-      "description": "Path (or repo:// URI in a future round) pointing at the producer's Run record JSON."
+      "anyOf": [
+        {"pattern": "^repo://[a-z][a-z0-9-]*@[a-f0-9]{40}/.+$"},
+        {"pattern": "^[^\\s]+$"}
+      ],
+      "description": "Path or repo:// URI to producer Run record. repo:// preferred; local paths accepted for migration interop."
     },
     "run_record_hash": {
       "type": "string",
@@ -53,7 +58,11 @@
     "event_log_ref": {
       "type": "string",
       "minLength": 1,
-      "description": "Path (or repo:// URI in a future round) pointing at the source event ledger JSONL."
+      "anyOf": [
+        {"pattern": "^repo://[a-z][a-z0-9-]*@[a-f0-9]{40}/.+$"},
+        {"pattern": "^[^\\s]+$"}
+      ],
+      "description": "Path or repo:// URI to the source event ledger JSONL. repo:// preferred; local paths accepted for migration interop."
     },
     "event_log_hash": {
       "type": "string",
@@ -73,7 +82,11 @@
     "sandbox_image_ref": {
       "type": "string",
       "minLength": 1,
-      "description": "Sandbox/worktree reference cloned from producer Run record. Carries the commit SHA the run executed under."
+      "anyOf": [
+        {"pattern": "^repo://[a-z][a-z0-9-]*@[a-f0-9]{40}/.*$"},
+        {"pattern": "^[^\\s]+$"}
+      ],
+      "description": "Sandbox/worktree reference cloned from producer Run record. repo:// URI preferred (carries repo + commit SHA); free-form strings accepted for legacy producers."
     },
     "artifact_refs": {
       "type": "array",
@@ -90,7 +103,12 @@
           "ref": {
             "type": "string",
             "minLength": 1,
-            "description": "Path or URI pointing at the artifact."
+            "anyOf": [
+              {"pattern": "^repo://[a-z][a-z0-9-]*@[a-f0-9]{40}/.+$"},
+              {"pattern": "^artifact://[a-z][a-z0-9-]*/.+$"},
+              {"pattern": "^[^\\s]+$"}
+            ],
+            "description": "Path, repo:// URI, or artifact:// URI pointing at the artifact. URI forms preferred; local paths accepted for migration interop."
           },
           "artifact_id": {
             "type": "string",

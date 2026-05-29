@@ -55,11 +55,20 @@ def build_parser() -> argparse.ArgumentParser:
     evidence_cdcp.add_argument("--out", type=Path, required=True)
     evidence_cdcp.add_argument(
         "--run-record",
+        type=str,
+        default=None,
+        help=(
+            "explicit path or repo:// URI to the producer Run record JSON. "
+            "Default: auto-discover at <event-log>/../run-records/<run_id>.json."
+        ),
+    )
+    evidence_cdcp.add_argument(
+        "--portfolio-root",
         type=Path,
         default=None,
         help=(
-            "explicit path to the producer Run record JSON. "
-            "Default: auto-discover at <event-log>/../run-records/<run_id>.json."
+            "portfolio root for resolving repo:// URIs. "
+            "Default: $PORTFOLIO_ROOT env var, else the parent directory of this repo."
         ),
     )
 
@@ -129,6 +138,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.path,
                 output_path,
                 run_record_path=args.run_record,
+                portfolio_root=args.portfolio_root,
             )
             for error in result.line_errors:
                 print(
