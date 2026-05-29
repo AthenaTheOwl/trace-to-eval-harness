@@ -16,6 +16,10 @@
 | R-TTE-012 | owner_role: science.eval_curator | `trace_to_eval/uri.py`, `trace_to_eval/run_evidence.py`, `trace_to_eval/cli.py`, `tests/test_uri.py`, `tests/test_run_evidence.py` |
 | R-TTE-013 | owner_role: science.eval_curator | `schemas/run-evidence.schema.json` (v2.1.0), `tests/fixtures/valid/run_evidence.json` |
 | R-TTE-014 | owner_role: science.eval_curator | `trace_to_eval/run_evidence.py`, `examples/run_evidence/`, `tests/test_run_evidence.py` |
+| R-TTE-015 | owner_role: science.eval_curator | `.github/workflows/run-evidence-gates.yml`, `decisions/DEC-TTE-010-trace-to-eval-harness-ci-enforces-run-evidence-chain.md` |
+| R-TTE-016 | owner_role: science.eval_curator | `.github/workflows/run-evidence-gates.yml` (job `consumer-gates`, step `all-example-packets-validate`), `examples/run_evidence/` |
+| R-TTE-017 | owner_role: science.eval_curator | `.github/workflows/run-evidence-gates.yml` (job `consumer-gates`, step `uri-resolver-tests`), `tests/test_uri.py`, `tests/test_run_evidence.py` |
+| R-TTE-018 | owner_role: science.eval_curator | `.github/workflows/run-evidence-gates.yml`, `decisions/DEC-TTE-010-trace-to-eval-harness-ci-enforces-run-evidence-chain.md` |
 | R-TTE-SCHEMA-001 | owner_role: engineering.implementation | `schemas/trace.schema.json`, `schemas/eval-case.schema.json`, `schemas/run-report.schema.json` |
 | R-TTE-SCHEMA-002 | owner_role: engineering.implementation | `trace_to_eval/cli.py`, `trace_to_eval/validation.py`, `tests/test_validation.py` |
 | R-TTE-SCHEMA-003 | owner_role: science.proof_gate_runner | `tests/fixtures/valid/`, `tests/fixtures/invalid/`, `scripts/validate_schemas.py` |

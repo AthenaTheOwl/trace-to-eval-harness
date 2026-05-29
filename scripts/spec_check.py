@@ -30,12 +30,12 @@ def main() -> int:
     req_text = req_path.read_text(encoding="utf-8")
     trace_text = trace_path.read_text(encoding="utf-8")
     req_ids = set(REQ_RE.findall(req_text))
-    expected = {f"R-TTE-{index:03d}" for index in range(1, 15)} | {
+    expected = {f"R-TTE-{index:03d}" for index in range(1, 19)} | {
         f"R-TTE-SCHEMA-{index:03d}" for index in range(1, 6)
     }
     if req_ids != expected:
         violations.append(
-            "requirements must define R-TTE-001..014 and "
+            "requirements must define R-TTE-001..018 and "
             f"R-TTE-SCHEMA-001..005; found {sorted(req_ids)}"
         )
 
@@ -61,7 +61,7 @@ def main() -> int:
 
     if violations:
         return report(violations)
-    print("spec_check OK (19 requirements, owner roles, DEC coverage)")
+    print("spec_check OK (23 requirements, owner roles, DEC coverage)")
     return 0
 
 

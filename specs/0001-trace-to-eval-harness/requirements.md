@@ -98,6 +98,37 @@ verbatim from `Run.outputs[].artifact_id`. Legacy producers
 (no `repo://` `sandbox_image_ref`) keep getting portfolio-relative
 posix paths.
 
+### R-TTE-015: CI run-evidence gates workflow exists and triggers correctly
+
+The repo must publish a `.github/workflows/run-evidence-gates.yml`
+workflow that triggers on every pull request and on every push to
+`main`, runs on `ubuntu-latest`, and pins Python 3.11. The workflow
+binds the trace-to-eval-harness side of the DEC-CDCP-015 CI
+enforcement contract to a named GitHub Actions check so the contract
+mapping is legible from the Actions tab.
+
+### R-TTE-016: All example packets validate as a CI gate
+
+The `all-example-packets-validate` job in
+`run-evidence-gates.yml` must iterate every
+`examples/run_evidence/*.packet.json` file, run
+`python -m trace_to_eval evidence validate <path>` on each, and fail
+the build if any packet fails validation or if the glob is empty.
+
+### R-TTE-017: URI resolver tests run as a CI gate
+
+The `uri-resolver-tests` job in `run-evidence-gates.yml` must run
+`pytest tests/test_uri.py tests/test_run_evidence.py` so the Round 6
+URI-handling coverage is bound to a named CI check rather than
+folded into the general pytest run.
+
+### R-TTE-018: No continue-on-error on contract gates
+
+No step in `.github/workflows/run-evidence-gates.yml` may carry
+`continue-on-error: true` or `if: ${{ failure() }}` marker that turns
+a contract gate informational. Every gate in the DEC-CDCP-015
+contract that applies to this repo must block the build on failure.
+
 ### R-TTE-SCHEMA-001: Published schemas
 
 The repo must publish JSON Schemas for trace, eval case, and run report shapes under `schemas/`.
