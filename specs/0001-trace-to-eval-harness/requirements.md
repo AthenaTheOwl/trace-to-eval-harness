@@ -169,6 +169,41 @@ by command, breakdown by result, and the top N ledger paths by
 invocation count. A `--since YYYY-MM-DD` flag must filter entries by
 timestamp.
 
+### R-TTE-023: Schemas-cache mirrors post-DEC-CDCP-020 shape
+
+The cached cross-repo schemas under `ops/schemas-cache/`
+(`decision.schema.json`, `dream-output.schema.json`,
+`run.schema.json`) must match the post-DEC-CDCP-020 athena-site
+sources byte-for-byte so the four new optional fields
+(`systems_map`, `transferable_principle`, `falsification_test`,
+`adoption_ladder`) round-trip through this repo's validators.
+`check_schema_cache_freshness.py` must exit 0 against the current
+athena-site sources.
+
+### R-TTE-024: AGENTS.md names the systems-thinking discipline
+
+`.agents/AGENTS.md` must carry a top-level section titled
+"Systems-thinking discipline (per DEC-CDCP-020)" that names the
+four optional fields, the warning-then-ratchet sequence, and the
+fallback string for pure-design choices where a falsification
+test does not apply.
+
+### R-TTE-025: validate_decisions emits non-blocking warning
+
+`scripts/validate_decisions.py` must emit a stderr warning when a
+DEC with `status: approved` is missing any of the four
+systems-thinking fields. The script must exit 0 when only
+warnings are present (schema-validation violations still exit 1).
+The warning must name the missing field(s) and the DEC path.
+
+### R-TTE-026: Last three DECs retrofitted
+
+`DEC-TTE-009`, `DEC-TTE-010`, and `DEC-TTE-011` must populate all
+four systems-thinking fields with substantive content (not
+placeholders). The retrofit serves as the demonstration of what
+the discipline looks like in practice; earlier DECs stay
+un-retrofitted and surface as warnings until the 30-day amendment.
+
 ### R-TTE-SCHEMA-001: Published schemas
 
 The repo must publish JSON Schemas for trace, eval case, and run report shapes under `schemas/`.

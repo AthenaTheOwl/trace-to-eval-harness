@@ -24,6 +24,10 @@
 | R-TTE-020 | owner_role: science.eval_curator | `trace_to_eval/validate_chain.py`, `trace_to_eval/cli.py`, `tests/test_validate_chain.py`, `tests/fixtures/validate_chain/` |
 | R-TTE-021 | owner_role: science.eval_curator | `trace_to_eval/audit.py`, `trace_to_eval/cli.py`, `tests/test_audit.py`, `ops/audit-log.example.jsonl`, `.gitignore` |
 | R-TTE-022 | owner_role: science.eval_curator | `trace_to_eval/audit.py` (`summarize`, `format_summary`), `trace_to_eval/cli.py`, `tests/test_audit.py` |
+| R-TTE-023 | owner_role: science.eval_curator | `ops/schemas-cache/decision.schema.json`, `ops/schemas-cache/dream-output.schema.json`, `ops/schemas-cache/run.schema.json`, `scripts/check_schema_cache_freshness.py` |
+| R-TTE-024 | owner_role: science.eval_curator | `.agents/AGENTS.md` (section "Systems-thinking discipline (per DEC-CDCP-020)"), `decisions/DEC-TTE-012-systems-thinking-discipline-adoption.md` |
+| R-TTE-025 | owner_role: science.eval_curator | `scripts/validate_decisions.py` (`SYSTEMS_THINKING_FIELDS`, `systems_thinking_warnings`), `decisions/DEC-TTE-012-systems-thinking-discipline-adoption.md` |
+| R-TTE-026 | owner_role: science.eval_curator | `decisions/DEC-TTE-009-packet-generator-resolves-repo-uris.md`, `decisions/DEC-TTE-010-trace-to-eval-harness-ci-enforces-run-evidence-chain.md`, `decisions/DEC-TTE-011-uri-parser-property-tests-and-validate-chain.md` |
 | R-TTE-SCHEMA-001 | owner_role: engineering.implementation | `schemas/trace.schema.json`, `schemas/eval-case.schema.json`, `schemas/run-report.schema.json` |
 | R-TTE-SCHEMA-002 | owner_role: engineering.implementation | `trace_to_eval/cli.py`, `trace_to_eval/validation.py`, `tests/test_validation.py` |
 | R-TTE-SCHEMA-003 | owner_role: science.proof_gate_runner | `tests/fixtures/valid/`, `tests/fixtures/invalid/`, `scripts/validate_schemas.py` |
