@@ -16,6 +16,7 @@ jobs:
       - run: python -m pip install -e ".[dev]"
       - run: python -m pytest
       - run: python scripts/voice_lint.py
+      - run: python scripts/validate_sensitive_disclosures.py
       - run: python scripts/check_no_bom.py
       - run: python scripts/spec_check.py
       - run: python scripts/validate_schemas.py
