@@ -7,6 +7,7 @@ import sys
 
 from .audit import AUDIT_LOG_DEFAULT, append_audit_entry, format_summary, summarize
 from .cdcp_events import import_cdcp_events
+from .dashboard import run_dashboard
 from .ingest import ingest_trace
 from .report import write_reports
 from .run_evidence import OUTPUT_FILENAME as EVIDENCE_OUTPUT_FILENAME
@@ -156,6 +157,33 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=5,
         help="how many top ledger paths to show (default: 5).",
+    )
+
+    dashboard = subparsers.add_parser(
+        "dashboard",
+        help="render a per-producer-repo summary of run-evidence packets",
+    )
+    dashboard.add_argument(
+        "paths",
+        type=Path,
+        nargs="*",
+        default=[Path("examples/run_evidence")],
+        help="packet file(s) or directory(ies). Default: examples/run_evidence",
+    )
+    dashboard.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="optional output path. Default: stdout.",
+    )
+    dashboard.add_argument(
+        "--portfolio-root",
+        type=Path,
+        default=None,
+        help=(
+            "optional portfolio root; also walks <root>/<repo>/examples/run_evidence "
+            "for every sibling repo with one."
+        ),
     )
     return parser
 
@@ -317,6 +345,19 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(format_summary(summary))
             return 0
+
+    if args.command == "dashboard":
+        paths = args.paths if isinstance(args.paths, list) else [args.paths]
+        rendered = run_dashboard(
+            paths=paths,
+            output=args.out,
+            portfolio_root=args.portfolio_root,
+        )
+        if args.out is None:
+            print(rendered, end="")
+        else:
+            print(f"wrote {args.out}")
+        return 0
 
     parser.error("unknown command")
     return 2
