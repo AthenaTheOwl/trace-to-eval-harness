@@ -157,3 +157,54 @@ def test_cli_audit_summary(
     assert "2 invocation(s)" in captured.out
     assert "validate-chain" in captured.out
     assert "evidence.from-cdcp-events" in captured.out
+
+
+def test_append_audit_entry_records_failure_fields(tmp_path: Path) -> None:
+    log = tmp_path / "audit.jsonl"
+    append_audit_entry(
+        "validate-chain",
+        ledger_path="ops/event-log/x.jsonl",
+        result="fail",
+        failing_stage="chain",
+        error_message="run record sha does not match ledger payload",
+        log_path=log,
+    )
+    entry = json.loads(log.read_text(encoding="utf-8").splitlines()[0])
+    assert entry["result"] == "fail"
+    assert entry["failing_stage"] == "chain"
+    assert "does not match" in entry["error_message"]
+
+
+def test_append_audit_entry_truncates_long_error_messages(tmp_path: Path) -> None:
+    log = tmp_path / "audit.jsonl"
+    long_message = "x" * 1000
+    append_audit_entry(
+        "validate-chain",
+        result="fail",
+        failing_stage="schema",
+        error_message=long_message,
+        log_path=log,
+    )
+    entry = json.loads(log.read_text(encoding="utf-8").splitlines()[0])
+    assert len(entry["error_message"]) < 300
+    assert entry["error_message"].endswith("...")
+
+
+def test_summarize_includes_by_failing_stage(tmp_path: Path) -> None:
+    log = tmp_path / "audit.jsonl"
+    append_audit_entry("validate-chain", result="ok", log_path=log)
+    append_audit_entry(
+        "validate-chain", result="fail", failing_stage="schema", log_path=log
+    )
+    append_audit_entry(
+        "validate-chain", result="fail", failing_stage="chain", log_path=log
+    )
+    append_audit_entry(
+        "validate-chain", result="fail", failing_stage="schema", log_path=log
+    )
+    summary = summarize(log_path=log)
+    assert summary.by_failing_stage == {"schema": 2, "chain": 1}
+    assert summary.by_result == {"ok": 1, "fail": 3}
+    rendered = format_summary(summary)
+    assert "by failing stage" in rendered
+    assert "schema: 2" in rendered

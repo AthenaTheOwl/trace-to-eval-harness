@@ -5,6 +5,9 @@ import json
 from pathlib import Path
 import sys
 
+import hashlib
+import os
+
 from .audit import AUDIT_LOG_DEFAULT, append_audit_entry, format_summary, summarize
 from .cdcp_events import import_cdcp_events
 from .dashboard import run_dashboard
@@ -13,8 +16,80 @@ from .report import write_reports
 from .run_evidence import OUTPUT_FILENAME as EVIDENCE_OUTPUT_FILENAME
 from .run_evidence import write_run_evidence_from_cdcp_events
 from .runner import run_eval_file
+from .uri import resolve_ref
 from .validate_chain import ChainValidationError, run_validate_chain
 from .validation import schema_kinds, validate_document
+
+
+def _sha256_file(path: Path) -> str | None:
+    """Return the sha256 hex digest of a file, or None if it cannot be read."""
+    try:
+        h = hashlib.sha256()
+        with path.open("rb") as f:
+            for chunk in iter(lambda: f.read(65536), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except OSError:
+        return None
+
+
+def _strict_rehash_packet(
+    packet: dict, portfolio_root: Path
+) -> list[tuple[str, str]]:
+    """Re-hash references in a run-evidence packet and compare against stored.
+
+    Returns a list of (kind, reason) failure tuples. Empty list means the
+    packet's stored hashes all match what the referenced files hash to
+    on disk. The check covers ``run_record_ref/hash``, ``event_log_ref/hash``,
+    and each ``artifact_hashes[]`` entry. Refs that cannot be resolved
+    (e.g. ``artifact://`` URIs) are reported as a single failure rather
+    than silently skipped.
+    """
+    failures: list[tuple[str, str]] = []
+
+    pairs = [
+        ("run_record", packet.get("run_record_ref"), packet.get("run_record_hash")),
+        ("event_log", packet.get("event_log_ref"), packet.get("event_log_hash")),
+    ]
+    for kind, ref, stored_hash in pairs:
+        if not ref or not stored_hash:
+            failures.append((kind, f"missing ref or stored hash"))
+            continue
+        path = resolve_ref(ref, portfolio_root)
+        if path is None:
+            failures.append((kind, f"ref does not resolve to a file: {ref}"))
+            continue
+        actual = _sha256_file(path)
+        if actual is None:
+            failures.append((kind, f"could not read resolved path: {path}"))
+            continue
+        if actual != stored_hash:
+            failures.append(
+                (kind, f"hash mismatch: stored={stored_hash[:16]}... actual={actual[:16]}... at {path}")
+            )
+
+    for entry in packet.get("artifact_hashes", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        ref = entry.get("ref")
+        stored_hash = entry.get("hash")
+        if not ref or not stored_hash:
+            failures.append(("artifact", "missing ref or stored hash on artifact entry"))
+            continue
+        path = resolve_ref(ref, portfolio_root)
+        if path is None:
+            failures.append(("artifact", f"ref does not resolve: {ref}"))
+            continue
+        actual = _sha256_file(path)
+        if actual is None:
+            failures.append(("artifact", f"could not read resolved path: {path}"))
+            continue
+        if actual != stored_hash:
+            failures.append(
+                ("artifact", f"hash mismatch at {ref}: stored={stored_hash[:16]}... actual={actual[:16]}...")
+            )
+
+    return failures
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -50,6 +125,25 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         help="override the schema directory for testing or local schema drafts",
+    )
+    evidence_validate.add_argument(
+        "--strict",
+        action="store_true",
+        help=(
+            "in addition to schema validation, re-hash the referenced run record, "
+            "event log, and artifacts and compare against the packet's stored "
+            "hashes; exits nonzero on any mismatch. Promotes the v2.1.0 "
+            "replay-equivalence claim from advisory to enforced."
+        ),
+    )
+    evidence_validate.add_argument(
+        "--portfolio-root",
+        type=Path,
+        default=None,
+        help=(
+            "portfolio root for resolving repo:// URIs in --strict mode. "
+            "Default: $PORTFOLIO_ROOT env var, else the parent directory of this repo."
+        ),
     )
     evidence_cdcp = evidence_subparsers.add_parser(
         "from-cdcp-events",
@@ -269,16 +363,38 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"invalid: {path}: {exc}", file=sys.stderr)
                     failed = True
                     continue
-                if result.passed:
-                    print(f"valid: {path} matches {result.schema_id}")
+                if not result.passed:
+                    failed = True
+                    print(
+                        f"invalid: {path} does not match {result.schema_id}",
+                        file=sys.stderr,
+                    )
+                    for issue in result.issues:
+                        print(f"  - {issue.location}: {issue.message}", file=sys.stderr)
                     continue
-                failed = True
-                print(
-                    f"invalid: {path} does not match {result.schema_id}",
-                    file=sys.stderr,
+                print(f"valid: {path} matches {result.schema_id}")
+
+                if not getattr(args, "strict", False):
+                    continue
+
+                # Strict mode: re-hash referenced run record + event log +
+                # artifacts and compare against the packet's stored hashes.
+                portfolio_root = (
+                    args.portfolio_root
+                    or Path(__import__("os").environ.get("PORTFOLIO_ROOT") or path.resolve().parent.parent.parent)
                 )
-                for issue in result.issues:
-                    print(f"  - {issue.location}: {issue.message}", file=sys.stderr)
+                packet = json.loads(path.read_text(encoding="utf-8"))
+                strict_failures = _strict_rehash_packet(packet, portfolio_root)
+                if strict_failures:
+                    failed = True
+                    print(
+                        f"strict-rehash failure(s) for {path}:",
+                        file=sys.stderr,
+                    )
+                    for kind, reason in strict_failures:
+                        print(f"  - {kind}: {reason}", file=sys.stderr)
+                else:
+                    print(f"strict: {path} re-hash matches stored hashes")
             return 1 if failed else 0
 
     if args.command == "run":
@@ -321,6 +437,16 @@ def main(argv: list[str] | None = None) -> int:
         except ChainValidationError as exc:
             print(f"FAIL: {exc.stage}", file=sys.stderr)
             print(f"  reason: {exc.message}", file=sys.stderr)
+            if not args.no_audit:
+                append_audit_entry(
+                    command="validate-chain",
+                    ledger_path=str(args.ledger_path),
+                    run_id=None,
+                    result="fail",
+                    failing_stage=exc.stage,
+                    error_message=exc.message,
+                    log_path=args.audit_log,
+                )
             return 1
         summary = chain.to_summary()
         print("OK validate-chain")
