@@ -10,6 +10,7 @@ Trace-To-Eval Harness turns a failed AI trace into a checked-in eval case. You f
 - Eval curator: convert trace evidence into review-ready YAML with TODO fields.
 - Implementation agent: run checks locally before changing prompts, tools, or retrieval code.
 - Review agent: read the report and see which case, suite, and check failed.
+- Project reader: inspect whether an agent run has enough evidence to reproduce, audit, compare, and write up.
 
 ## Install And Run
 
@@ -19,6 +20,8 @@ python -m trace_to_eval ingest examples/traces/bad_citation.json --out eval_case
 python -m trace_to_eval from-cdcp-events ../portfolio-repo/ops/event-log --out eval_cases/cdcp
 python -m trace_to_eval evidence from-cdcp-events ../portfolio-repo/ops/event-log --out reports/run_evidence.json
 python -m trace_to_eval evidence validate reports/run_evidence.json
+python -m trace_to_eval bundle create --run-id run-example --runtime-adapter local-baseline --run-record repo://repo/ops/run-records/run-example.json --event-ledger repo://repo/ops/event-ledger/run-example.jsonl --model-tools-fingerprint 0000000000000000000000000000000000000000000000000000000000000000 --generated-at 2026-06-17T00:00:00Z --out reports/run_bundle.json
+python -m trace_to_eval bundle validate reports/run_bundle.json
 python -m trace_to_eval validate trace examples/traces/bad_citation.json
 python -m trace_to_eval validate eval examples/eval_cases.yaml
 python -m trace_to_eval run examples/eval_cases.yaml --traces examples/traces --out reports/run.json
@@ -33,13 +36,54 @@ directory, or a repo root with `ops/event-log/*.jsonl`. It writes
 
 ## Example Run-Evidence Packet
 
-`examples/run_evidence/run-cb524eb06115.packet.json` is the first
-bridge-demo packet: a real CDCP Event ledger from a
-procurement-negotiation-lab factory run, piped through this repo's
-`evidence from-cdcp-events` CLI. The packet validates against
-`schemas/run-evidence.schema.json`. See
+`examples/run_evidence/run-7b662d3f68b1.packet.json` is the current
+procurement-negotiation-lab bridge-demo packet: a real CDCP Event ledger
+from a factory run, piped through this repo's `evidence from-cdcp-events`
+CLI. The packet validates against `schemas/run-evidence.schema.json`. See
 [`examples/run_evidence/README.md`](examples/run_evidence/README.md)
-for the regeneration steps and a pointer to the upstream emitter.
+for the full portfolio packet table, regeneration steps, and upstream
+emitter decisions.
+
+## Run-Bundle Envelope
+
+Run-evidence packets summarize one run for review. Run bundles add the
+runtime-agnostic envelope around that evidence: the runtime adapter, run
+record ref and hash, event ledger ref and hash, model/tool fingerprint,
+optional trace and sandbox manifest refs, artifact refs, replay status, and
+adapter version. This is the comparison surface for OpenAI Agents SDK,
+Claude Code, Codex, local Python, and custom factory runs.
+
+```powershell
+python -m trace_to_eval bundle create `
+  --run-id run-example `
+  --runtime-adapter openai-agents-sdk `
+  --run-record repo://ai-field-brief/ops/run-records/run-example.json `
+  --event-ledger repo://ai-field-brief/ops/event-ledger/run-example.jsonl `
+  --model-tools-fingerprint 0000000000000000000000000000000000000000000000000000000000000000 `
+  --generated-at 2026-06-17T00:00:00Z `
+  --replay-status not_attempted `
+  --out reports/run_bundle.json
+
+python -m trace_to_eval bundle validate reports/run_bundle.json
+python -m trace_to_eval bundle compare reports/run_bundle_a.json reports/run_bundle_b.json
+```
+
+The bundle does not require one vendor runtime. It requires stable refs,
+hashes, and replay status, so a reviewer can compare a custom factory run
+against an Agents SDK sandbox run without trusting either framework's native
+trace format as the only source of truth.
+
+## Evidence Chain
+
+For research-style review, this repo demonstrates the bridge from failure
+observation to empirical artifact:
+
+- Failed traces become deterministic eval cases.
+- CDCP event ledgers become review packets.
+- Run bundles make runtime choice explicit, so SDK, sandbox, and custom
+  factory runs can be compared by adapter and evidence hash.
+- Strict validation re-hashes referenced artifacts, which turns "the run
+  passed" into a claim that can be audited later.
 
 ## What It Catches
 
