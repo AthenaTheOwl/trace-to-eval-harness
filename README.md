@@ -10,7 +10,6 @@ Trace-To-Eval Harness turns a failed AI trace into a checked-in eval case. You f
 - Eval curator: convert trace evidence into review-ready YAML with TODO fields.
 - Implementation agent: run checks locally before changing prompts, tools, or retrieval code.
 - Review agent: read the report and see which case, suite, and check failed.
-- Project reader: inspect whether an agent run has enough evidence to reproduce, audit, compare, and write up.
 
 ## Install And Run
 
@@ -75,8 +74,8 @@ trace format as the only source of truth.
 
 ## Evidence Chain
 
-For research-style review, this repo demonstrates the bridge from failure
-observation to empirical artifact:
+This repo demonstrates the bridge from failure observation to an
+auditable artifact:
 
 - Failed traces become deterministic eval cases.
 - CDCP event ledgers become review packets.
