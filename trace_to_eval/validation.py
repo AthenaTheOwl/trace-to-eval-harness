@@ -17,6 +17,7 @@ SCHEMA_FILES = {
     "eval": "eval-case.schema.json",
     "report": "run-report.schema.json",
     "evidence": "run-evidence.schema.json",
+    "run-bundle": "run-bundle.schema.json",
 }
 
 
@@ -71,7 +72,7 @@ def _load_yaml(path: Path) -> Any:
 def load_document(kind: str, path: Path) -> Any:
     if kind == "eval":
         return _load_yaml(path)
-    if kind in {"trace", "report", "evidence"}:
+    if kind in {"trace", "report", "evidence", "run-bundle"}:
         return _load_json(path)
     known = ", ".join(schema_kinds())
     raise ValueError(f"unknown schema kind {kind!r}; expected one of: {known}")
