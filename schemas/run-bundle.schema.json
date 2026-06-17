@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trace-to-eval.dev/schemas/v1/run-bundle.schema.json",
+  "title": "Run Bundle",
+  "version": "1.0.0",
+  "description": "A higher-level container that points at a Run record + event ledger + (optional) provider-specific trace + sandbox manifest + model/tools fingerprint + emitted artifacts. The bundle is the runtime-agnostic envelope: framework adapters (local_baseline, openai_agents, langgraph, modal_sandbox, ...) all emit bundles that the comparison harness reads through a single schema. The contract is portable on purpose: 'serialized resumable state' is referenced through trace_ref + sandbox_manifest_ref, not pinned to one vendor's RunState object name.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "bundle_id",
+    "run_id",
+    "runtime_adapter",
+    "generated_at",
+    "run_record_ref",
+    "run_record_hash",
+    "event_ledger_ref",
+    "event_ledger_hash",
+    "model_tools_fingerprint",
+    "artifacts",
+    "replay_status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "bundle_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable identifier for the bundle. Conventionally `bundle-<sha8>` derived from canonical content. Distinct from run_id so the same run can be re-bundled with new adapter metadata."
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The producer's run_id from the referenced Run record. Always carried verbatim, never synthesized."
+    },
+    "runtime_adapter": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identifier for the adapter that produced this bundle. Conventional values: local_baseline, openai_agents, langgraph, modal_sandbox, google_adk, microsoft_agent_framework. Free-form so new adapters land without a schema bump.",
+      "examples": ["local_baseline", "openai_agents", "langgraph", "modal_sandbox"]
+    },
+    "adapter_version": {
+      "type": "string",
+      "description": "Optional version string for the adapter (SDK version, internal release tag, etc.). Useful when comparing bundles across SDK upgrades."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC 3339 timestamp the bundle was emitted."
+    },
+    "run_record_ref": {
+      "type": "string",
+      "minLength": 1,
+      "anyOf": [
+        {"pattern": "^repo://[a-z][a-z0-9-]*@[a-f0-9]{40}/.+$"},
+        {"pattern": "^[^\\s]+$"}
+      ],
+      "description": "Path or repo:// URI to the producer Run record JSON."
+    },
+    "run_record_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hex digest of the Run record bytes."
+    },
+    "event_ledger_ref": {
+      "type": "string",
+      "minLength": 1,
+      "anyOf": [
+        {"pattern": "^repo://[a-z][a-z0-9-]*@[a-f0-9]{40}/.+$"},
+        {"pattern": "^[^\\s]+$"}
+      ],
+      "description": "Path or repo:// URI to the event ledger JSONL file."
+    },
+    "event_ledger_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hex digest of the event ledger bytes."
+    },
+    "trace_ref": {
+      "type": "string",
+      "description": "Optional path or repo:// URI to provider-specific trace data (e.g. OpenAI Agents SDK trace export, LangGraph state snapshot, Modal job log)."
+    },
+    "trace_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Optional SHA-256 of the trace file. Required when trace_ref is set."
+    },
+    "sandbox_manifest_ref": {
+      "type": "string",
+      "description": "Optional path or repo:// URI to a sandbox-manifest JSON capturing image / environment / mounted repo commit / allowed tools / network policy / timeout / budget. See sandbox-manifest.schema.json for the contract."
+    },
+    "sandbox_manifest_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Optional SHA-256 of the sandbox-manifest file. Required when sandbox_manifest_ref is set."
+    },
+    "model_tools_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hex digest of the canonical (prompts + tool_schemas) snapshot for this run. Two bundles with the same fingerprint executed against the same prompt + tool surface; the field anchors cross-adapter equivalence checks."
+    },
+    "artifacts": {
+      "type": "array",
+      "description": "Outputs produced by the run. Each entry references one file by path or URI plus its SHA-256.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "hash"],
+        "properties": {
+          "ref": {"type": "string", "minLength": 1},
+          "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "kind": {
+            "type": "string",
+            "description": "Optional artifact kind: brief, eval-result, decision-record, code-patch, etc."
+          }
+        }
+      }
+    },
+    "replay_status": {
+      "type": "string",
+      "enum": ["pass", "investigate", "auto_rehydrate_blocked", "auto_rehydrated", "not_attempted"],
+      "description": "Replay outcome for this bundle. pass: rehydration + re-run produced equivalent artifacts. investigate: drift detected; human review required. auto_rehydrate_blocked: the adapter refused to rehydrate (e.g. missing trace). auto_rehydrated: rehydrated automatically and verified. not_attempted: bundle emitted but never replayed (the default for fresh bundles)."
+    },
+    "replay_notes": {
+      "type": "string",
+      "description": "Optional human-readable note on the replay outcome (e.g. which artifact diverged, which adapter step was non-deterministic)."
+    },
+    "cost_usage": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "description": "Optional adapter-specific cost / usage record (tokens, dollars, sandbox seconds, etc.)."
+    },
+    "notes": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Free-form operator notes."
+    }
+  }
+}

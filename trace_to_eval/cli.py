@@ -279,6 +279,70 @@ def build_parser() -> argparse.ArgumentParser:
             "for every sibling repo with one."
         ),
     )
+
+    bundle = subparsers.add_parser(
+        "bundle",
+        help="create, validate, or compare run-bundles (runtime-agnostic envelope)",
+    )
+    bundle_subparsers = bundle.add_subparsers(dest="bundle_command", required=True)
+
+    bundle_create = bundle_subparsers.add_parser(
+        "create", help="assemble a run-bundle JSON from refs + hashes"
+    )
+    bundle_create.add_argument("--run-id", required=True)
+    bundle_create.add_argument("--runtime-adapter", required=True)
+    bundle_create.add_argument("--run-record", required=True, help="path or repo:// URI")
+    bundle_create.add_argument("--event-ledger", required=True, help="path or repo:// URI")
+    bundle_create.add_argument(
+        "--model-tools-fingerprint",
+        required=True,
+        help="64-char SHA-256 of the canonical (prompts, tool_schemas) payload",
+    )
+    bundle_create.add_argument("--generated-at", required=True, help="RFC 3339 timestamp")
+    bundle_create.add_argument("--trace-ref", default=None)
+    bundle_create.add_argument("--trace-hash", default=None)
+    bundle_create.add_argument("--sandbox-manifest-ref", default=None)
+    bundle_create.add_argument("--sandbox-manifest-hash", default=None)
+    bundle_create.add_argument("--adapter-version", default=None)
+    bundle_create.add_argument(
+        "--replay-status",
+        default="not_attempted",
+        choices=["pass", "investigate", "auto_rehydrate_blocked", "auto_rehydrated", "not_attempted"],
+    )
+    bundle_create.add_argument(
+        "--artifact",
+        dest="artifacts",
+        action="append",
+        default=[],
+        help="repeatable: artifact spec `ref=<path>,hash=<sha256>[,kind=<kind>]`",
+    )
+    bundle_create.add_argument(
+        "--out", type=Path, required=True, help="output bundle.json path"
+    )
+    bundle_create.add_argument(
+        "--portfolio-root",
+        type=Path,
+        default=None,
+        help="optional portfolio root; used to resolve repo:// refs when hashing on-disk files",
+    )
+
+    bundle_validate = bundle_subparsers.add_parser(
+        "validate", help="JSON-schema-validate a bundle file"
+    )
+    bundle_validate.add_argument("paths", type=Path, nargs="+")
+    bundle_validate.add_argument(
+        "--schema-dir",
+        type=Path,
+        default=None,
+        help="override the schema directory for testing or local schema drafts",
+    )
+
+    bundle_compare = bundle_subparsers.add_parser(
+        "compare", help="diff two bundles by fingerprint + adapter + artifacts + replay status"
+    )
+    bundle_compare.add_argument("left", type=Path)
+    bundle_compare.add_argument("right", type=Path)
+
     return parser
 
 
@@ -485,5 +549,127 @@ def main(argv: list[str] | None = None) -> int:
             print(f"wrote {args.out}")
         return 0
 
+    if args.command == "bundle":
+        return _handle_bundle_command(args)
+
     parser.error("unknown command")
+    return 2
+
+
+def _parse_artifact_spec(spec: str) -> dict[str, str]:
+    """Parse `ref=<path>,hash=<sha>[,kind=<kind>]` into a dict.
+
+    Lenient on whitespace; case-sensitive on the keys. Raises ValueError
+    on missing required fields so the CLI can print a clear message.
+    """
+    out: dict[str, str] = {}
+    for piece in spec.split(","):
+        piece = piece.strip()
+        if not piece:
+            continue
+        if "=" not in piece:
+            raise ValueError(f"artifact spec piece missing '=': {piece!r}")
+        key, value = piece.split("=", 1)
+        out[key.strip()] = value.strip()
+    if "ref" not in out or "hash" not in out:
+        raise ValueError(
+            f"artifact spec must include ref= and hash=; got {sorted(out)} from {spec!r}"
+        )
+    return out
+
+
+def _handle_bundle_command(args) -> int:
+    from .run_bundle import (
+        compare_bundles,
+        create_bundle,
+        read_bundle,
+        validate_bundle,
+        write_bundle,
+    )
+
+    if args.bundle_command == "create":
+        try:
+            artifacts = [_parse_artifact_spec(spec) for spec in args.artifacts]
+        except ValueError as exc:
+            print(f"bundle create: {exc}", file=sys.stderr)
+            return 2
+
+        # Hash the run record + event ledger by resolving the refs through
+        # the standard URI resolver. The bundle author can pre-resolve;
+        # this is a convenience that keeps callers from having to compute
+        # SHA-256 by hand.
+        from .uri import resolve_ref
+        from .run_bundle import _sha256_file
+
+        portfolio_root = (
+            args.portfolio_root
+            or Path(os.environ.get("PORTFOLIO_ROOT") or Path.cwd())
+        )
+
+        def _resolve_and_hash(ref: str) -> tuple[str, str]:
+            path = resolve_ref(ref, portfolio_root)
+            if path is None or not path.exists():
+                raise FileNotFoundError(f"ref {ref!r} did not resolve to a readable file")
+            return ref, _sha256_file(path)
+
+        try:
+            rr_ref, rr_hash = _resolve_and_hash(args.run_record)
+            el_ref, el_hash = _resolve_and_hash(args.event_ledger)
+            trace_ref = trace_hash = None
+            if args.trace_ref:
+                trace_ref, trace_hash = _resolve_and_hash(args.trace_ref)
+                if args.trace_hash:
+                    trace_hash = args.trace_hash
+            sandbox_ref = sandbox_hash = None
+            if args.sandbox_manifest_ref:
+                sandbox_ref, sandbox_hash = _resolve_and_hash(args.sandbox_manifest_ref)
+                if args.sandbox_manifest_hash:
+                    sandbox_hash = args.sandbox_manifest_hash
+        except FileNotFoundError as exc:
+            print(f"bundle create: {exc}", file=sys.stderr)
+            return 1
+
+        bundle = create_bundle(
+            run_id=args.run_id,
+            runtime_adapter=args.runtime_adapter,
+            adapter_version=args.adapter_version,
+            generated_at=args.generated_at,
+            run_record_ref=rr_ref,
+            run_record_hash=rr_hash,
+            event_ledger_ref=el_ref,
+            event_ledger_hash=el_hash,
+            model_tools_fingerprint=args.model_tools_fingerprint,
+            artifacts=artifacts,
+            trace_ref=trace_ref,
+            trace_hash=trace_hash,
+            sandbox_manifest_ref=sandbox_ref,
+            sandbox_manifest_hash=sandbox_hash,
+            replay_status=args.replay_status,
+        )
+        write_bundle(bundle, args.out)
+        print(f"wrote {args.out}")
+        return 0
+
+    if args.bundle_command == "validate":
+        failed = False
+        for path in args.paths:
+            try:
+                validate_bundle(path, schema_dir=args.schema_dir)
+                print(f"valid: {path}")
+            except (ValueError, OSError) as exc:
+                print(f"invalid: {path}: {exc}", file=sys.stderr)
+                failed = True
+        return 1 if failed else 0
+
+    if args.bundle_command == "compare":
+        left = read_bundle(args.left)
+        right = read_bundle(args.right)
+        cmp = compare_bundles(left, right)
+        print(cmp.summary_line())
+        if cmp.artifact_set_left_only:
+            print(f"  left-only artifacts: {cmp.artifact_set_left_only}")
+        if cmp.artifact_set_right_only:
+            print(f"  right-only artifacts: {cmp.artifact_set_right_only}")
+        return 0
+
     return 2
