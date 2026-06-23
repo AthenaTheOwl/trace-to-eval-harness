@@ -16,6 +16,7 @@ from .report import write_reports
 from .run_evidence import OUTPUT_FILENAME as EVIDENCE_OUTPUT_FILENAME
 from .run_evidence import write_run_evidence_from_cdcp_events
 from .runner import run_eval_file
+from .show import DEFAULT_REPORT, run_show
 from .uri import resolve_ref
 from .validate_chain import ChainValidationError, run_validate_chain
 from .validation import schema_kinds, validate_document
@@ -178,6 +179,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--fail-on-failure",
         action="store_true",
         help="exit 1 when any case fails",
+    )
+
+    show = subparsers.add_parser(
+        "show",
+        help="print a ranked, human-readable summary of a committed run report",
+    )
+    show.add_argument(
+        "report",
+        type=Path,
+        nargs="?",
+        default=DEFAULT_REPORT,
+        help=f"run-report JSON to summarize (default: {DEFAULT_REPORT})",
     )
 
     validate = subparsers.add_parser("validate", help="validate files against published schemas")
@@ -470,6 +483,19 @@ def main(argv: list[str] | None = None) -> int:
             f"({summary['failed_cases']} failed cases, {summary['failed_checks']} failed checks)"
         )
         if args.fail_on_failure and summary["failed_cases"]:
+            return 1
+        return 0
+
+    if args.command == "show":
+        try:
+            print(run_show(args.report))
+        except FileNotFoundError:
+            print(
+                f"no report at {args.report}; run "
+                "`python -m trace_to_eval run examples/eval_cases.yaml "
+                "--traces examples/traces --out reports/run.json` first",
+                file=sys.stderr,
+            )
             return 1
         return 0
 
