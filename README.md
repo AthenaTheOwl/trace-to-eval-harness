@@ -4,6 +4,26 @@
 
 Trace-To-Eval Harness turns a failed AI trace into a checked-in eval case. You feed it JSON from a bad answer, review the generated YAML, then run deterministic checks that produce a JSON and Markdown regression bundle. No model key is needed.
 
+## live demo
+
+an interactive streamlit page mirrors `python -m trace_to_eval show`: it reads
+the committed `reports/run.json` and renders the pinned regressions as metrics,
+a ranked suites table, a per-suite case filter, and an evidence expander. no
+network, no secrets, no model key.
+
+<!-- live url: https://<your-app>.streamlit.app -->
+
+run it locally:
+
+```
+pip install -r requirements.txt
+streamlit run streamlit_app.py
+```
+
+deploy on streamlit community cloud: new app -> repo
+`AthenaTheOwl/trace-to-eval-harness`, branch `main`, main file
+`streamlit_app.py`.
+
 ## try it
 
 No arguments, no model key, offline. Reads the committed `reports/run.json`
