@@ -150,6 +150,11 @@
       "type": "string",
       "description": "Opaque reference (path or URI or image digest) to a frozen sandbox image associated with this run."
     },
+    "sandbox_manifest_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opaque reference (repo:// URI or artifact:// id) to the sandbox manifest describing the runtime workspace (mounts, files, env, model + adapter ids) for this run. Populated by Agents-SDK-style adapters. See sandbox-manifest.schema.json for the manifest body shape."
+    },
     "gate_results_summary": {
       "type": "object",
       "additionalProperties": false,
