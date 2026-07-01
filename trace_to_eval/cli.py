@@ -8,6 +8,8 @@ import sys
 import hashlib
 import os
 
+import yaml
+
 from .audit import AUDIT_LOG_DEFAULT, append_audit_entry, format_summary, summarize
 from .cdcp_events import import_cdcp_events
 from .dashboard import run_dashboard
@@ -364,13 +366,25 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "ingest":
-        payload = ingest_trace(args.trace, args.out)
+        try:
+            payload = ingest_trace(args.trace, args.out)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            # Missing file, a directory where a trace file is expected, or
+            # malformed trace JSON should read as a clean error, not a traceback.
+            print(f"error: {args.trace}: {exc}", file=sys.stderr)
+            return 1
         checks = sum(len(case.get("checks", [])) for case in payload["cases"])
         print(f"wrote {args.out} ({len(payload['cases'])} case, {checks} checks)")
         return 0
 
     if args.command == "from-cdcp-events":
-        result = import_cdcp_events(args.path, args.out)
+        try:
+            result = import_cdcp_events(args.path, args.out)
+        except OSError as exc:
+            # A missing event-log path surfaces as FileNotFoundError from
+            # discover_event_log_files; report it instead of a raw traceback.
+            print(f"error: {args.path}: {exc}", file=sys.stderr)
+            return 1
         for error in result.line_errors:
             print(
                 f"warning: skipped {error.source_path}:{error.line_number}: {error.message}",
@@ -475,7 +489,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1 if failed else 0
 
     if args.command == "run":
-        payload = run_eval_file(args.eval_cases, args.traces)
+        try:
+            payload = run_eval_file(args.eval_cases, args.traces)
+        except (OSError, yaml.YAMLError) as exc:
+            # Missing or malformed eval-cases file: name the input and bail
+            # cleanly rather than dumping a parser/OS traceback.
+            print(f"error: {args.eval_cases}: {exc}", file=sys.stderr)
+            return 1
         markdown_path = write_reports(payload, args.out)
         summary = payload["summary"]
         print(
@@ -688,8 +708,16 @@ def _handle_bundle_command(args) -> int:
         return 1 if failed else 0
 
     if args.bundle_command == "compare":
-        left = read_bundle(args.left)
-        right = read_bundle(args.right)
+        try:
+            left = read_bundle(args.left)
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"error: {args.left}: {exc}", file=sys.stderr)
+            return 1
+        try:
+            right = read_bundle(args.right)
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"error: {args.right}: {exc}", file=sys.stderr)
+            return 1
         cmp = compare_bundles(left, right)
         print(cmp.summary_line())
         if cmp.artifact_set_left_only:
