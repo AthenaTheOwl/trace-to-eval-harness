@@ -110,7 +110,13 @@ def test_event_log_hash_uses_raw_bytes(tmp_path: Path) -> None:
     assert packet["event_log_hash"] == expected
 
 
-def test_evidence_from_cdcp_events_cli_writes_valid_packet(tmp_path, capsys) -> None:
+def test_evidence_from_cdcp_events_cli_writes_valid_packet(
+    tmp_path, capsys, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "trace_to_eval.cli.append_audit_entry",
+        lambda *_, **__: Path("audit-log.jsonl"),
+    )
     out_file = tmp_path / "packet.json"
 
     code = main(
@@ -135,6 +141,15 @@ def test_evidence_validate_cli_accepts_fixture(capsys) -> None:
     captured = capsys.readouterr()
     assert code == 0
     assert "run-evidence.schema.json" in captured.out
+
+
+def test_all_example_packets_validate() -> None:
+    packets = sorted((ROOT / "examples" / "run_evidence").glob("*.packet.json"))
+
+    assert len(packets) >= 8
+    for packet in packets:
+        result = validate_document("evidence", packet)
+        assert result.passed, packet
 
 
 def test_missing_run_record_fails_loudly(tmp_path: Path) -> None:
@@ -212,8 +227,14 @@ def test_explicit_run_record_override(tmp_path: Path) -> None:
     assert packet["producer_run_id"] == "run-fixture000a"
 
 
-def test_explicit_run_record_cli_override(tmp_path: Path, capsys) -> None:
+def test_explicit_run_record_cli_override(
+    tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """CLI accepts --run-record and writes a valid packet."""
+    monkeypatch.setattr(
+        "trace_to_eval.cli.append_audit_entry",
+        lambda *_, **__: Path("audit-log.jsonl"),
+    )
     event_log_dir = tmp_path / "stray-events"
     event_log_dir.mkdir()
     target = event_log_dir / FIXTURE_EVENT_LOG_FILE.name
@@ -452,8 +473,14 @@ def test_generator_rejects_artifact_uri_as_run_record_override(tmp_path: Path) -
     assert "artifact://" in str(excinfo.value)
 
 
-def test_portfolio_root_cli_flag_overrides_default(tmp_path: Path, capsys) -> None:
+def test_portfolio_root_cli_flag_overrides_default(
+    tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """The --portfolio-root CLI flag threads through to resolve repo:// URIs."""
+    monkeypatch.setattr(
+        "trace_to_eval.cli.append_audit_entry",
+        lambda *_, **__: Path("audit-log.jsonl"),
+    )
     portfolio_root = tmp_path / "portfolio"
     portfolio_root.mkdir()
     event_log = _build_producer_repo_with_uri_record(
