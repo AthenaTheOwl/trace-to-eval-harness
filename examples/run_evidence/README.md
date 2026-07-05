@@ -59,6 +59,7 @@ through a producer-side DEC.
 | [`run-36e307499472.packet.json`](./run-36e307499472.packet.json) | ai-field-brief | `run-36e307499472` | 2026-05-29 | Brief publish (W22 backfill; fifteen-event ledger; Python emitter) | [`DEC-PUB-006`](https://github.com/AthenaTheOwl/ai-field-brief/blob/main/decisions/DEC-PUB-006-brief-emits-portable-uri-refs.md) |
 | [`run-0ed06c8afae6.packet.json`](./run-0ed06c8afae6.packet.json) | ai-field-brief | `run-0ed06c8afae6` | 2026-06-04 | Brief publish (W23 replay-contract-catch-up; fifteen-event ledger; Python emitter) | [`DEC-PUB-006`](https://github.com/AthenaTheOwl/ai-field-brief/blob/main/decisions/DEC-PUB-006-brief-emits-portable-uri-refs.md) |
 | [`run-6a665b303138.packet.json`](./run-6a665b303138.packet.json) | chip-supply-chain-map | `run-6a665b303138` | 2026-05-29 | Watchlist data refresh export (eight-event ledger; TypeScript emitter) | [`DEC-FIN-004`](https://github.com/AthenaTheOwl/chip-supply-chain-map/blob/main/decisions/DEC-FIN-004-watchlist-export-emits-portable-uri-refs.md) |
+| [`run-3d0c9124c372.packet.json`](./run-3d0c9124c372.packet.json) | procurement-negotiation-lab | `run-3d0c9124c372` | 2026-07-01 | Factory test pipeline run (testrun-iqr; thirteen-event ledger, eight gates all passed; Python emitter) | [`DEC-FACTORY-008`](https://github.com/AthenaTheOwl/procurement-negotiation-lab/blob/main/decisions/DEC-FACTORY-008-factory-emits-portable-uri-refs.md) |
 
 Every packet now carries `repo://<repo>@<sha>/<path>` URIs in
 `run_record_ref`, `event_log_ref`, `sandbox_image_ref`, and (for
