@@ -161,8 +161,9 @@
       "description": "Rollup of gate-check outcomes for this run. Detailed per-gate records live in events[] with kind=gate_check.",
       "properties": {
         "gates_passed": {"type": "array", "items": {"type": "string"}, "description": "Names of gates that passed."},
-        "gates_failed": {"type": "array", "items": {"type": "string"}, "description": "Names of gates that failed."},
-        "all_passed": {"type": "boolean", "description": "True iff gates_failed is empty."}
+        "gates_failed": {"type": "array", "items": {"type": "string"}, "description": "Names of gates that failed (must_pass)."},
+        "gates_advisory": {"type": "array", "items": {"type": "string"}, "description": "Names of gates that failed with must_pass=false (advisory findings); reported but do not affect all_passed."},
+        "all_passed": {"type": "boolean", "description": "True iff no must_pass gate failed; advisory failures do not flip this."}
       }
     },
     "systems_map": {
