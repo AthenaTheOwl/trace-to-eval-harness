@@ -116,6 +116,7 @@ python -m trace_to_eval ingest examples/traces/bad_citation.json --out eval_case
 python -m trace_to_eval from-cdcp-events ../portfolio-repo/ops/event-log --out eval_cases/cdcp
 python -m trace_to_eval evidence from-cdcp-events ../portfolio-repo/ops/event-log --out reports/run_evidence.json
 python -m trace_to_eval evidence validate reports/run_evidence.json
+python -m trace_to_eval evidence validate --strict reports/run_evidence.json
 python -m trace_to_eval bundle create --run-id run-example --runtime-adapter local-baseline --run-record repo://repo/ops/run-records/run-example.json --event-ledger repo://repo/ops/event-ledger/run-example.jsonl --model-tools-fingerprint 0000000000000000000000000000000000000000000000000000000000000000 --generated-at 2026-06-17T00:00:00Z --out reports/run_bundle.json
 python -m trace_to_eval bundle validate reports/run_bundle.json
 python -m trace_to_eval validate trace examples/traces/bad_citation.json
@@ -149,6 +150,20 @@ trace refs, rollback refs. The published schema is
 ```powershell
 python -m trace_to_eval evidence from-cdcp-events ../ai-field-brief/ops/event-log --out reports/run_evidence.json
 python -m trace_to_eval evidence validate reports/run_evidence.json
+python -m trace_to_eval evidence validate --strict reports/run_evidence.json
+```
+
+Schema validation checks packet shape. Strict validation also resolves every `repo://`
+reference in the current portfolio checkout and re-hashes the canonical Run record,
+event ledger, and artifacts. A fresh W31 packet passes this check; older examples whose
+source files changed or disappeared fail with the exact stale reference.
+
+The committed packet set can also be inspected as one producer dashboard, while the
+audit summary records successful and failed CLI use:
+
+```powershell
+python -m trace_to_eval dashboard examples/run_evidence
+python -m trace_to_eval audit summary
 ```
 
 ## Run-bundle envelope

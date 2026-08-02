@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from trace_to_eval.cli import _strict_rehash_packet, main
+from trace_to_eval.run_evidence import canonical_run_record_bytes
 
 
 def _sha256(path: Path) -> str:
@@ -27,7 +28,6 @@ def _make_repo(tmp_path: Path) -> tuple[Path, Path, str, Path, str]:
     """Stage a fake portfolio repo with a run record + event log + one artifact."""
     repo_root = tmp_path / "portfolio"
     repo = repo_root / "fakeproducer"
-    sha = "0" * 40
     rec_dir = repo / "ops" / "run-records"
     rec_dir.mkdir(parents=True)
     rec_path = rec_dir / "run-fixture.json"
@@ -41,7 +41,11 @@ def _make_repo(tmp_path: Path) -> tuple[Path, Path, str, Path, str]:
     art_path = repo / "artifact.txt"
     art_path.write_text("hello", encoding="utf-8")
 
-    return repo_root, rec_path, _sha256(rec_path), log_path, _sha256(log_path)
+    record_hash = hashlib.sha256(
+        canonical_run_record_bytes(json.loads(rec_path.read_text(encoding="utf-8")))
+    ).hexdigest()
+    assert record_hash != _sha256(rec_path)
+    return repo_root, rec_path, record_hash, log_path, _sha256(log_path)
 
 
 def _packet(repo_root: Path, rec_hash: str, log_hash: str, artifact_hash: str) -> dict:
@@ -133,3 +137,30 @@ def test_evidence_validate_strict_cli_exits_nonzero_on_mismatch(
     assert exit_strict == 1
     captured = capsys.readouterr()
     assert "strict-rehash failure" in captured.err
+
+
+def test_evidence_validate_strict_uses_default_portfolio_root(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo_root, rec, rec_hash, log, log_hash = _make_repo(tmp_path)
+    artifact_hash = hashlib.sha256(
+        (repo_root / "fakeproducer" / "artifact.txt").read_bytes()
+    ).hexdigest()
+    packet = _packet(repo_root, rec_hash, log_hash, artifact_hash)
+    packet_path = tmp_path / "examples" / "run_evidence" / "fixture.packet.json"
+    packet_path.parent.mkdir(parents=True)
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+
+    monkeypatch.setattr(
+        "trace_to_eval.cli.default_portfolio_root", lambda: repo_root
+    )
+
+    exit_code = main(
+        ["evidence", "validate", str(packet_path), "--strict"]
+    )
+
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "re-hash matches stored hashes" in captured.out

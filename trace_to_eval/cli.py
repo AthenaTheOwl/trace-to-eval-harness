@@ -16,7 +16,11 @@ from .dashboard import run_dashboard
 from .ingest import ingest_trace
 from .report import write_reports
 from .run_evidence import OUTPUT_FILENAME as EVIDENCE_OUTPUT_FILENAME
-from .run_evidence import write_run_evidence_from_cdcp_events
+from .run_evidence import (
+    canonical_run_record_bytes,
+    default_portfolio_root,
+    write_run_evidence_from_cdcp_events,
+)
 from .runner import run_eval_file
 from .show import DEFAULT_REPORT, run_show
 from .uri import resolve_ref
@@ -33,6 +37,17 @@ def _sha256_file(path: Path) -> str | None:
                 h.update(chunk)
         return h.hexdigest()
     except OSError:
+        return None
+
+
+def _sha256_run_record(path: Path) -> str | None:
+    """Return the canonical Run-record hash used by packet generation."""
+    try:
+        record = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(record, dict):
+            return None
+        return hashlib.sha256(canonical_run_record_bytes(record)).hexdigest()
+    except (OSError, UnicodeError, json.JSONDecodeError):
         return None
 
 
@@ -56,13 +71,15 @@ def _strict_rehash_packet(
     ]
     for kind, ref, stored_hash in pairs:
         if not ref or not stored_hash:
-            failures.append((kind, f"missing ref or stored hash"))
+            failures.append((kind, "missing ref or stored hash"))
             continue
         path = resolve_ref(ref, portfolio_root)
         if path is None:
             failures.append((kind, f"ref does not resolve to a file: {ref}"))
             continue
-        actual = _sha256_file(path)
+        actual = (
+            _sha256_run_record(path) if kind == "run_record" else _sha256_file(path)
+        )
         if actual is None:
             failures.append((kind, f"could not read resolved path: {path}"))
             continue
@@ -134,9 +151,8 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help=(
             "in addition to schema validation, re-hash the referenced run record, "
-            "event log, and artifacts and compare against the packet's stored "
-            "hashes; exits nonzero on any mismatch. Promotes the v2.1.0 "
-            "replay-equivalence claim from advisory to enforced."
+            "event log, and artifacts in the current portfolio checkout and compare "
+            "against the packet's stored hashes; exits nonzero on any mismatch."
         ),
     )
     evidence_validate.add_argument(
@@ -470,10 +486,7 @@ def main(argv: list[str] | None = None) -> int:
 
                 # Strict mode: re-hash referenced run record + event log +
                 # artifacts and compare against the packet's stored hashes.
-                portfolio_root = (
-                    args.portfolio_root
-                    or Path(__import__("os").environ.get("PORTFOLIO_ROOT") or path.resolve().parent.parent.parent)
-                )
+                portfolio_root = args.portfolio_root or default_portfolio_root()
                 packet = json.loads(path.read_text(encoding="utf-8"))
                 strict_failures = _strict_rehash_packet(packet, portfolio_root)
                 if strict_failures:
