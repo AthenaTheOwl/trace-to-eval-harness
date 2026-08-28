@@ -27,6 +27,8 @@ class Trace:
     citations: list[Any] = field(default_factory=list)
     spans: list[Any] = field(default_factory=list)
     tool_calls: list[Any] = field(default_factory=list)
+    terminal_state: Any = None
+    effects: list[Any] = field(default_factory=list)
     expected_behavior: dict[str, Any] = field(default_factory=dict)
     failure_tags: list[str] = field(default_factory=list)
     raw: dict[str, Any] = field(default_factory=dict)
@@ -46,6 +48,8 @@ class Trace:
             citations=_as_list(payload.get("citations")),
             spans=_as_list(payload.get("spans")),
             tool_calls=_as_list(payload.get("tool_calls")),
+            terminal_state=payload.get("terminal_state"),
+            effects=_as_list(payload.get("effects")),
             expected_behavior=expected,
             failure_tags=[str(tag) for tag in _as_list(payload.get("failure_tags"))],
             raw=payload,
@@ -83,4 +87,3 @@ def tool_call_name(call: Any) -> str:
     if isinstance(function, dict) and isinstance(function.get("name"), str):
         return function["name"]
     return json.dumps(call, sort_keys=True)
-

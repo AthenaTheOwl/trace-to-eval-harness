@@ -204,6 +204,18 @@ placeholders). The retrofit serves as the demonstration of what
 the discipline looks like in practice; earlier DECs stay
 un-retrofitted and surface as warnings until the 30-day amendment.
 
+### R-TTE-027: Terminal-state and extra-effect checks
+
+The deterministic runner must support exact terminal-state comparison and an
+allowlist check over structured effects. A correct final message must not mask
+the wrong stored state or an unapproved side effect.
+
+### R-TTE-028: Repeated-run reliability report
+
+The CLI must aggregate two or more ordered run reports into case-level pass@1,
+pass@k, pass^k, stability, and missing-attempt measures. A missing case occupies
+its attempt slot and counts as a failed attempt.
+
 ### R-TTE-SCHEMA-001: Published schemas
 
 The repo must publish JSON Schemas for trace, eval case, and run report shapes under `schemas/`.
@@ -224,3 +236,8 @@ Schema validation and deterministic checks must stay as the first gate before an
 
 The repo must publish a JSON Schema for run evidence packets and
 include positive and negative fixtures for validation.
+
+### R-TTE-SCHEMA-006: Reliability report schema
+
+The repo must publish and validate a versioned JSON Schema for repeated-run
+reliability reports, with positive and negative fixtures.
