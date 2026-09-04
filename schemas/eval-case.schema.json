@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://trace-to-eval.dev/schemas/v1/eval-case.schema.json",
   "title": "Eval Case File",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "object",
   "required": ["cases"],
   "additionalProperties": false,
@@ -31,6 +31,7 @@
             "refusal_behavior",
             "generated_regression",
             "all_checks",
+            "state_integrity",
             "default"
           ]
         },
@@ -101,7 +102,9 @@
             "does_not_contain_text",
             "citation_span_present",
             "tool_call_allowed",
-            "refusal_required"
+            "refusal_required",
+            "terminal_state_matches",
+            "no_unexpected_effects"
           ]
         },
         "value": true,
@@ -112,6 +115,11 @@
         "allowed_tools": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "expected_state": true,
+        "allowed_effects": {
+          "type": "array",
+          "items": true
         },
         "markers": {
           "type": "array",
@@ -151,6 +159,28 @@
           },
           "then": {
             "required": ["allowed_tools"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "terminal_state_matches" }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["expected_state"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "no_unexpected_effects" }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["allowed_effects"]
           }
         }
       ]

@@ -1,0 +1,35 @@
+{
+  "summary": {
+    "reports": 2,
+    "cases": 1,
+    "attempt_slots": 2,
+    "observed_attempts": 2,
+    "missing_attempts": 0,
+    "pass_at_1_cases": 1,
+    "pass_at_1_rate": 1.0,
+    "pass_at_k_cases": 1,
+    "pass_at_k_rate": 1.0,
+    "pass_all_k_cases": 1,
+    "pass_all_k_rate": 1.0,
+    "stable_cases": 1,
+    "stable_case_rate": 1.0
+  },
+  "reports": ["attempt-1.json", "attempt-2.json"],
+  "cases": [
+    {
+      "id": "case-a",
+      "suite": "default",
+      "attempts_expected": 2,
+      "attempts_observed": 2,
+      "pass_count": 2,
+      "pass_at_1": true,
+      "pass_at_k": true,
+      "pass_all_k": true,
+      "stable": true,
+      "attempts": [
+        {"attempt": 1, "report": "attempt-1.json", "observed": true, "passed": true, "trace_id": "a-1"},
+        {"attempt": 2, "report": "attempt-2.json", "observed": true, "passed": true, "trace_id": "a-2"}
+      ]
+    }
+  ]
+}
