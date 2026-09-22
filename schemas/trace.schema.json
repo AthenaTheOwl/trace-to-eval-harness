@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://trace-to-eval.dev/schemas/v1/trace.schema.json",
   "title": "Trace",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "object",
   "required": ["trace_id", "input", "output"],
   "additionalProperties": true,
@@ -41,6 +41,11 @@
           { "type": "object", "additionalProperties": true }
         ]
       }
+    },
+    "terminal_state": true,
+    "effects": {
+      "type": "array",
+      "items": true
     },
     "expected_behavior": {
       "type": "object",

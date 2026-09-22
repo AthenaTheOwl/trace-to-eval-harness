@@ -122,9 +122,28 @@ python -m trace_to_eval bundle validate reports/run_bundle.json
 python -m trace_to_eval validate trace examples/traces/bad_citation.json
 python -m trace_to_eval validate eval examples/eval_cases.yaml
 python -m trace_to_eval run examples/eval_cases.yaml --traces examples/traces --out reports/run.json
+python -m trace_to_eval reliability examples/repeated_runs/attempt-1.json examples/repeated_runs/attempt-2.json examples/repeated_runs/attempt-3.json --out reports/reliability.json
 ```
 
 The run command writes `reports/run.json` and `reports/run.md`. Add `--fail-on-failure` when a CI gate should exit non-zero on failed cases.
+
+## Stateful and repeated-run checks
+
+Answer text can look correct while the system ends in the wrong state or leaves an
+extra effect behind. Traces may therefore carry `terminal_state` and `effects`.
+Eval cases can assert exact state with `terminal_state_matches` and constrain effects
+with `no_unexpected_effects`.
+
+The `reliability` command combines ordered run reports. It reports:
+
+- `pass@1`: cases that passed the first attempt.
+- `pass@k`: cases that passed at least once in k attempts.
+- `pass^k`: cases that passed every attempt.
+- missing attempts and stable cases, with omissions counted as failures.
+
+The committed three-attempt fixture is deliberately intermittent: `pass@1` and
+`pass@3` are 100 percent while `pass^3` is 50 percent. The live Streamlit page
+renders the same report so the difference is visible without reading raw JSON.
 
 The CDCP event-log command accepts an event-log file, an event-log
 directory, or a repo root with `ops/event-log/*.jsonl`. It writes

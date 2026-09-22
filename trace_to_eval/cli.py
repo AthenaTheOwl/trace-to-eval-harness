@@ -15,6 +15,7 @@ from .cdcp_events import import_cdcp_events
 from .dashboard import run_dashboard
 from .ingest import ingest_trace
 from .report import write_reports
+from .reliability import aggregate_reliability, write_reliability_reports
 from .run_evidence import OUTPUT_FILENAME as EVIDENCE_OUTPUT_FILENAME
 from .run_evidence import (
     canonical_run_record_bytes,
@@ -198,6 +199,18 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="exit 1 when any case fails",
     )
+
+    reliability = subparsers.add_parser(
+        "reliability",
+        help="aggregate repeated run reports into pass@k and pass^k evidence",
+    )
+    reliability.add_argument(
+        "reports",
+        type=Path,
+        nargs="+",
+        help="ordered run-report JSON files; the first is attempt one",
+    )
+    reliability.add_argument("--out", type=Path, required=True)
 
     show = subparsers.add_parser(
         "show",
@@ -517,6 +530,23 @@ def main(argv: list[str] | None = None) -> int:
         )
         if args.fail_on_failure and summary["failed_cases"]:
             return 1
+        return 0
+
+    if args.command == "reliability":
+        try:
+            payload = aggregate_reliability(args.reports)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            print(f"error: reliability: {exc}", file=sys.stderr)
+            return 1
+        markdown_path = write_reliability_reports(payload, args.out)
+        summary = payload["summary"]
+        print(
+            f"wrote {args.out} and {markdown_path} "
+            f"(pass@1={summary['pass_at_1_rate']:.1%}, "
+            f"pass@{summary['reports']}={summary['pass_at_k_rate']:.1%}, "
+            f"pass^{summary['reports']}={summary['pass_all_k_rate']:.1%}, "
+            f"missing={summary['missing_attempts']})"
+        )
         return 0
 
     if args.command == "show":

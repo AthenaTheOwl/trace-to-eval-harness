@@ -27,3 +27,5 @@ jobs:
       - run: python scripts/validate_skills.py
       - run: python scripts/validate_dreams.py
       - run: python scripts/check_schema_cache_freshness.py
+      - name: validate_data_conformance
+        run: python scripts/validate_data_conformance.py

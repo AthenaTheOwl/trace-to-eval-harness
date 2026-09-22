@@ -20,10 +20,12 @@ FIXTURES = [
     ("eval", ROOT / "tests" / "fixtures" / "valid" / "eval_cases.yaml", True),
     ("report", ROOT / "tests" / "fixtures" / "valid" / "run_report.json", True),
     ("evidence", ROOT / "tests" / "fixtures" / "valid" / "run_evidence.json", True),
+    ("reliability", ROOT / "tests" / "fixtures" / "valid" / "reliability_report.json", True),
     ("trace", ROOT / "tests" / "fixtures" / "invalid" / "trace_missing_output.json", False),
     ("eval", ROOT / "tests" / "fixtures" / "invalid" / "eval_cases_unknown_check.yaml", False),
     ("report", ROOT / "tests" / "fixtures" / "invalid" / "run_report_bad_count.json", False),
     ("evidence", ROOT / "tests" / "fixtures" / "invalid" / "run_evidence_missing_refs.json", False),
+    ("reliability", ROOT / "tests" / "fixtures" / "invalid" / "reliability_report_bad_rate.json", False),
 ]
 
 
