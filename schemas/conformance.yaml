@@ -1,0 +1,21 @@
+# Maps each schema to the files it governs, for
+# scripts/validate_data_conformance.py. validate_schemas.py checks the
+# schema files themselves; this file is what makes them constrain the
+# data they describe.
+version: 1
+mappings:
+  - schema: eval-case.schema.json
+    files: ["eval_cases/*.yaml", "examples/eval_cases.yaml"]
+    records: self
+  - schema: reliability-report.schema.json
+    files: ["reports/reliability.json"]
+    records: self
+  - schema: run-report.schema.json
+    files: ["reports/run.json"]
+    records: self
+  - schema: trace.schema.json
+    files: ["examples/traces/*.json"]
+    records: self
+  - schema: run-evidence.schema.json
+    files: ["examples/run_evidence/*.packet.json"]
+    records: self

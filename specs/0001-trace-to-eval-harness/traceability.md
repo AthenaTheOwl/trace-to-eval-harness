@@ -28,8 +28,11 @@
 | R-TTE-024 | owner_role: science.eval_curator | `.agents/AGENTS.md` (section "Systems-thinking discipline (per DEC-CDCP-020)"), `decisions/DEC-TTE-012-systems-thinking-discipline-adoption.md` |
 | R-TTE-025 | owner_role: science.eval_curator | `scripts/validate_decisions.py` (`SYSTEMS_THINKING_FIELDS`, `systems_thinking_warnings`), `decisions/DEC-TTE-012-systems-thinking-discipline-adoption.md` |
 | R-TTE-026 | owner_role: science.eval_curator | `decisions/DEC-TTE-009-packet-generator-resolves-repo-uris.md`, `decisions/DEC-TTE-010-trace-to-eval-harness-ci-enforces-run-evidence-chain.md`, `decisions/DEC-TTE-011-uri-parser-property-tests-and-validate-chain.md` |
+| R-TTE-027 | owner_role: science.proof_gate_runner | `trace_to_eval/models.py`, `trace_to_eval/runner.py`, `schemas/trace.schema.json`, `schemas/eval-case.schema.json`, `tests/test_runner.py` |
+| R-TTE-028 | owner_role: science.proof_gate_runner | `trace_to_eval/reliability.py`, `trace_to_eval/cli.py`, `tests/test_reliability.py`, `examples/repeated_runs/`, `reports/reliability.json` |
 | R-TTE-SCHEMA-001 | owner_role: engineering.implementation | `schemas/trace.schema.json`, `schemas/eval-case.schema.json`, `schemas/run-report.schema.json` |
 | R-TTE-SCHEMA-002 | owner_role: engineering.implementation | `trace_to_eval/cli.py`, `trace_to_eval/validation.py`, `tests/test_validation.py` |
 | R-TTE-SCHEMA-003 | owner_role: science.proof_gate_runner | `tests/fixtures/valid/`, `tests/fixtures/invalid/`, `scripts/validate_schemas.py` |
 | R-TTE-SCHEMA-004 | owner_role: science.proof_gate_runner | `trace_to_eval/runner.py`, `decisions/DEC-TTE-001-deterministic-checks-before-llm-judges.md`, `decisions/DEC-TTE-005-formal-schemas-before-integrations.md` |
 | R-TTE-SCHEMA-005 | owner_role: engineering.implementation | `schemas/run-evidence.schema.json` (v2), `tests/fixtures/valid/run_evidence.json`, `tests/fixtures/invalid/run_evidence_missing_refs.json` |
+| R-TTE-SCHEMA-006 | owner_role: engineering.implementation | `schemas/reliability-report.schema.json`, `tests/fixtures/valid/reliability_report.json`, `tests/fixtures/invalid/reliability_report_bad_rate.json` |

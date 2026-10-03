@@ -21,12 +21,19 @@ from trace_to_eval.runner import CHECKS, evaluate_case
 
 REPO = Path(__file__).resolve().parent
 REPORT = REPO / "reports" / "run.json"
+RELIABILITY_REPORT = REPO / "reports" / "reliability.json"
 
 
 def load_report() -> dict[str, Any] | None:
     if not REPORT.exists():
         return None
     return json.loads(REPORT.read_text(encoding="utf-8"))
+
+
+def load_reliability_report() -> dict[str, Any] | None:
+    if not RELIABILITY_REPORT.exists():
+        return None
+    return json.loads(RELIABILITY_REPORT.read_text(encoding="utf-8"))
 
 
 def observed_snippet(check: dict[str, Any]) -> str:
@@ -136,6 +143,38 @@ with st.expander("evidence — full check detail per failing case"):
                 f"  observed: `{observed_snippet(ck)}`"
             )
 
+reliability = load_reliability_report()
+if reliability:
+    st.divider()
+    st.subheader("one success is not repeated-run reliability")
+    reliability_summary = reliability["summary"]
+    k = reliability_summary["reports"]
+    r1, r2, r3, r4 = st.columns(4)
+    r1.metric("pass@1", f"{reliability_summary['pass_at_1_rate']:.0%}")
+    r2.metric(f"pass@{k}", f"{reliability_summary['pass_at_k_rate']:.0%}")
+    r3.metric(f"pass^{k}", f"{reliability_summary['pass_all_k_rate']:.0%}")
+    r4.metric("stable cases", f"{reliability_summary['stable_case_rate']:.0%}")
+    st.caption(
+        "The committed fixture has two cases and three attempts. One case fails "
+        "only on attempt two, so pass@1 and pass@3 stay green while pass^3 falls."
+    )
+    st.dataframe(
+        [
+            {
+                "case": case["id"],
+                "suite": case["suite"],
+                "passed": f"{case['pass_count']} / {case['attempts_expected']}",
+                "pass@1": case["pass_at_1"],
+                f"pass@{k}": case["pass_at_k"],
+                f"pass^{k}": case["pass_all_k"],
+                "stable": case["stable"],
+            }
+            for case in reliability["cases"]
+        ],
+        use_container_width=True,
+        hide_index=True,
+    )
+
 # ---------------------------------------------------------------------------
 # interactive: run the REAL evaluator on a trace you supply.
 # this is not a lookup — it imports trace_to_eval.runner.evaluate_case and the
@@ -195,6 +234,31 @@ EXAMPLES: dict[str, dict[str, Any]] = {
                 "type": "tool_call_allowed",
                 "allowed_tools": ["read_file", "search_docs"],
             }
+        ],
+    },
+    "wrong final state plus a stray side effect": {
+        "trace": {
+            "trace_id": "live_demo",
+            "input": "Approve invoice inv-7 and notify its owner.",
+            "output": "Invoice approved.",
+            "terminal_state": {"invoice": {"id": "inv-7", "status": "pending"}},
+            "effects": [
+                {"kind": "invoice.updated", "target": "inv-7"},
+                {"kind": "email.sent", "target": "unrelated@example.test"},
+            ],
+        },
+        "suite": "state_integrity",
+        "checks": [
+            {
+                "type": "terminal_state_matches",
+                "expected_state": {"invoice": {"id": "inv-7", "status": "approved"}},
+            },
+            {
+                "type": "no_unexpected_effects",
+                "allowed_effects": [
+                    {"kind": "invoice.updated", "target": "inv-7"}
+                ],
+            },
         ],
     },
 }

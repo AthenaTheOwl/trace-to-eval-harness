@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://trace-to-eval.dev/schemas/v1/run-report.schema.json",
   "title": "Run Report",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "object",
   "required": ["summary", "cases"],
   "additionalProperties": false,
@@ -90,7 +90,9 @@
             "does_not_contain_text",
             "citation_span_present",
             "tool_call_allowed",
-            "refusal_required"
+            "refusal_required",
+            "terminal_state_matches",
+            "no_unexpected_effects"
           ]
         },
         "passed": {

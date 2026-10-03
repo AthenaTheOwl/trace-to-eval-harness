@@ -1,0 +1,92 @@
+{
+  "cases": [
+    {
+      "attempts": [
+        {
+          "attempt": 1,
+          "observed": true,
+          "passed": true,
+          "report": "examples/repeated_runs/attempt-1.json",
+          "trace_id": "approval-attempt-1"
+        },
+        {
+          "attempt": 2,
+          "observed": true,
+          "passed": true,
+          "report": "examples/repeated_runs/attempt-2.json",
+          "trace_id": "approval-attempt-2"
+        },
+        {
+          "attempt": 3,
+          "observed": true,
+          "passed": true,
+          "report": "examples/repeated_runs/attempt-3.json",
+          "trace_id": "approval-attempt-3"
+        }
+      ],
+      "attempts_expected": 3,
+      "attempts_observed": 3,
+      "id": "approval_sequence",
+      "pass_all_k": true,
+      "pass_at_1": true,
+      "pass_at_k": true,
+      "pass_count": 3,
+      "stable": true,
+      "suite": "state_integrity"
+    },
+    {
+      "attempts": [
+        {
+          "attempt": 1,
+          "observed": true,
+          "passed": true,
+          "report": "examples/repeated_runs/attempt-1.json",
+          "trace_id": "invoice-attempt-1"
+        },
+        {
+          "attempt": 2,
+          "observed": true,
+          "passed": false,
+          "report": "examples/repeated_runs/attempt-2.json",
+          "trace_id": "invoice-attempt-2"
+        },
+        {
+          "attempt": 3,
+          "observed": true,
+          "passed": true,
+          "report": "examples/repeated_runs/attempt-3.json",
+          "trace_id": "invoice-attempt-3"
+        }
+      ],
+      "attempts_expected": 3,
+      "attempts_observed": 3,
+      "id": "invoice_terminal_state",
+      "pass_all_k": false,
+      "pass_at_1": true,
+      "pass_at_k": true,
+      "pass_count": 2,
+      "stable": false,
+      "suite": "state_integrity"
+    }
+  ],
+  "reports": [
+    "examples/repeated_runs/attempt-1.json",
+    "examples/repeated_runs/attempt-2.json",
+    "examples/repeated_runs/attempt-3.json"
+  ],
+  "summary": {
+    "attempt_slots": 6,
+    "cases": 2,
+    "missing_attempts": 0,
+    "observed_attempts": 6,
+    "pass_all_k_cases": 1,
+    "pass_all_k_rate": 0.5,
+    "pass_at_1_cases": 2,
+    "pass_at_1_rate": 1.0,
+    "pass_at_k_cases": 2,
+    "pass_at_k_rate": 1.0,
+    "reports": 3,
+    "stable_case_rate": 0.5,
+    "stable_cases": 1
+  }
+}

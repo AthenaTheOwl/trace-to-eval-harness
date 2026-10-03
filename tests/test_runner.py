@@ -58,3 +58,53 @@ cases:
     assert payload["summary"]["passed_cases"] == 1
     assert payload["summary"]["failed_checks"] == 0
 
+
+def test_runner_grades_terminal_state_and_unexpected_effects(tmp_path) -> None:
+    traces = tmp_path / "traces"
+    traces.mkdir()
+    (traces / "state.json").write_text(
+        """
+{
+  "trace_id": "state",
+  "input": "approve invoice",
+  "output": "Invoice approved.",
+  "terminal_state": {"invoice": {"id": "inv-7", "status": "approved"}},
+  "effects": [
+    {"kind": "invoice.updated", "target": "inv-7"},
+    {"kind": "email.sent", "target": "owner@example.test"}
+  ]
+}
+""".strip(),
+        encoding="utf-8",
+    )
+    eval_file = tmp_path / "cases.yaml"
+    eval_file.write_text(
+        """
+cases:
+  - id: state_case
+    suite: state_integrity
+    trace_id: state
+    trace_file: state.json
+    checks:
+      - type: terminal_state_matches
+        expected_state:
+          invoice:
+            id: inv-7
+            status: approved
+      - type: no_unexpected_effects
+        allowed_effects:
+          - kind: invoice.updated
+            target: inv-7
+""".strip(),
+        encoding="utf-8",
+    )
+
+    payload = run_eval_file(eval_file, traces)
+
+    assert payload["summary"]["failed_cases"] == 1
+    checks = payload["cases"][0]["checks"]
+    assert checks[0]["passed"] is True
+    assert checks[1]["passed"] is False
+    assert checks[1]["observed"] == [
+        {"kind": "email.sent", "target": "owner@example.test"}
+    ]
