@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trace-to-eval.dev/schemas/v1/false-success-report.schema.json",
+  "title": "False-Success Audit Report",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["summary", "rules", "traces"],
+  "additionalProperties": false,
+  "properties": {
+    "summary": {
+      "type": "object",
+      "required": [
+        "traces", "tool_calls", "tool_errors", "repaired", "ignored",
+        "proceeded_as_success", "success_without_effect", "flagged_traces"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "traces": { "type": "integer", "minimum": 1 },
+        "tool_calls": { "$ref": "#/$defs/non_negative_integer" },
+        "tool_errors": { "$ref": "#/$defs/non_negative_integer" },
+        "repaired": { "$ref": "#/$defs/non_negative_integer" },
+        "ignored": { "$ref": "#/$defs/non_negative_integer" },
+        "proceeded_as_success": { "$ref": "#/$defs/non_negative_integer" },
+        "success_without_effect": { "$ref": "#/$defs/non_negative_integer" },
+        "flagged_traces": { "$ref": "#/$defs/non_negative_integer" }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "required": ["error_statuses", "success_statuses", "completion_phrases", "write_tools"],
+      "additionalProperties": false,
+      "properties": {
+        "error_statuses": { "$ref": "#/$defs/strings" },
+        "success_statuses": { "$ref": "#/$defs/strings" },
+        "completion_phrases": { "$ref": "#/$defs/strings" },
+        "write_tools": {
+          "type": "object",
+          "required": ["source", "values"],
+          "additionalProperties": false,
+          "properties": {
+            "source": { "enum": ["default_verbs", "option"] },
+            "values": { "$ref": "#/$defs/strings" }
+          }
+        }
+      }
+    },
+    "traces": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/trace" }
+    }
+  },
+  "$defs": {
+    "non_negative_integer": { "type": "integer", "minimum": 0 },
+    "strings": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "trace": {
+      "type": "object",
+      "required": [
+        "trace_id", "source", "tool_calls", "success_claim", "write_calls",
+        "effects_recorded", "effects", "tool_errors", "flags"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "trace_id": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "tool_calls": { "$ref": "#/$defs/non_negative_integer" },
+        "success_claim": {
+          "type": "object",
+          "required": ["claimed", "rules"],
+          "additionalProperties": false,
+          "properties": {
+            "claimed": { "type": "boolean" },
+            "rules": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^(terminal_state\\.status=|output_phrase:).+"
+              }
+            }
+          }
+        },
+        "write_calls": { "$ref": "#/$defs/non_negative_integer" },
+        "effects_recorded": { "type": "boolean" },
+        "effects": { "$ref": "#/$defs/non_negative_integer" },
+        "tool_errors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/tool_error" }
+        },
+        "flags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["proceeded_as_success", "success_without_effect"] }
+        }
+      }
+    },
+    "tool_error": {
+      "type": "object",
+      "required": ["index", "tool", "error_rule", "class", "repaired_by"],
+      "additionalProperties": false,
+      "properties": {
+        "index": { "$ref": "#/$defs/non_negative_integer" },
+        "tool": { "type": "string", "minLength": 1 },
+        "error_rule": { "enum": ["status=error", "status=failed", "is_error", "error_key"] },
+        "class": { "enum": ["repaired", "ignored", "proceeded_as_success"] },
+        "repaired_by": {
+          "anyOf": [
+            { "$ref": "#/$defs/non_negative_integer" },
+            { "type": "null" }
+          ]
+        }
+      }
+    }
+  }
+}

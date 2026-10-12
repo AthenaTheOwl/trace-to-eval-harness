@@ -1,0 +1,10 @@
+{
+  "trace_id": "fs_ignored_search",
+  "input": "What does the retention policy say about audit logs?",
+  "output": "I could not reach the policy search index, so I cannot answer this yet. Please retry once the index is back.",
+  "tool_calls": [
+    {"name": "search_docs", "arguments": {"query": "audit log retention"}, "is_error": true, "content": "connection refused"}
+  ],
+  "terminal_state": {"status": "failed"},
+  "effects": []
+}

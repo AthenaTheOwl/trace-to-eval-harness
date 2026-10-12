@@ -1,0 +1,58 @@
+{
+  "summary": {
+    "traces": 1,
+    "tool_calls": 2,
+    "tool_errors": 1,
+    "repaired": 0,
+    "ignored": 0,
+    "proceeded_as_success": 1,
+    "success_without_effect": 0,
+    "flagged_traces": 1
+  },
+  "rules": {
+    "error_statuses": [
+      "error",
+      "failed"
+    ],
+    "success_statuses": [
+      "success"
+    ],
+    "completion_phrases": [
+      "task complete"
+    ],
+    "write_tools": {
+      "source": "option",
+      "values": [
+        "save_report"
+      ]
+    }
+  },
+  "traces": [
+    {
+      "trace_id": "t-1",
+      "source": "traces/t-1.json",
+      "tool_calls": 2,
+      "success_claim": {
+        "claimed": true,
+        "rules": [
+          "terminal_state.status=success"
+        ]
+      },
+      "write_calls": 0,
+      "effects_recorded": false,
+      "effects": 0,
+      "tool_errors": [
+        {
+          "index": 1,
+          "tool": "fetch_page",
+          "error_rule": "error_key",
+          "class": "retried",
+          "repaired_by": null
+        }
+      ],
+      "flags": [
+        "proceeded_as_success"
+      ]
+    }
+  ]
+}

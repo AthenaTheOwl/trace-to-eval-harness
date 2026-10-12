@@ -13,6 +13,13 @@ import yaml
 from .audit import AUDIT_LOG_DEFAULT, append_audit_entry, format_summary, summarize
 from .cdcp_events import import_cdcp_events
 from .dashboard import run_dashboard
+from .false_success import (
+    DEFAULT_WRITE_VERBS,
+    audit_paths,
+    is_flagged,
+    parse_write_tools,
+    write_false_success_reports,
+)
 from .ingest import ingest_trace
 from .report import write_reports
 from .reliability import aggregate_reliability, write_reliability_reports
@@ -211,6 +218,32 @@ def build_parser() -> argparse.ArgumentParser:
         help="ordered run-report JSON files; the first is attempt one",
     )
     reliability.add_argument("--out", type=Path, required=True)
+
+    false_success = subparsers.add_parser(
+        "false-success",
+        help="classify tool errors in traces and flag success claims they do not support",
+    )
+    false_success.add_argument(
+        "paths",
+        type=Path,
+        nargs="+",
+        help="trace JSON files, or directories whose *.json files are traces",
+    )
+    false_success.add_argument("--out", type=Path, required=True)
+    false_success.add_argument(
+        "--write-tools",
+        type=str,
+        default=None,
+        help=(
+            "comma-separated tool names that change state. Default: any tool whose "
+            f"name contains one of these verbs: {', '.join(DEFAULT_WRITE_VERBS)}"
+        ),
+    )
+    false_success.add_argument(
+        "--fail-on-flag",
+        action="store_true",
+        help="exit 1 when any trace is flagged proceeded_as_success or success_without_effect",
+    )
 
     show = subparsers.add_parser(
         "show",
@@ -547,6 +580,27 @@ def main(argv: list[str] | None = None) -> int:
             f"pass^{summary['reports']}={summary['pass_all_k_rate']:.1%}, "
             f"missing={summary['missing_attempts']})"
         )
+        return 0
+
+    if args.command == "false-success":
+        try:
+            payload = audit_paths(args.paths, parse_write_tools(args.write_tools))
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            # Exit 2 keeps unreadable input distinct from exit 1 (flags found).
+            print(f"error: false-success: {exc}", file=sys.stderr)
+            return 2
+        markdown_path = write_false_success_reports(payload, args.out)
+        summary = payload["summary"]
+        print(
+            f"wrote {args.out} and {markdown_path} "
+            f"({summary['traces']} traces, {summary['tool_errors']} tool errors: "
+            f"repaired={summary['repaired']}, ignored={summary['ignored']}, "
+            f"proceeded_as_success={summary['proceeded_as_success']}; "
+            f"success_without_effect={summary['success_without_effect']}; "
+            f"flagged_traces={summary['flagged_traces']})"
+        )
+        if args.fail_on_flag and is_flagged(payload):
+            return 1
         return 0
 
     if args.command == "show":

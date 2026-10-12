@@ -14,8 +14,11 @@ mappings:
     files: ["reports/run.json"]
     records: self
   - schema: trace.schema.json
-    files: ["examples/traces/*.json"]
+    files: ["examples/traces/*.json", "examples/false_success/*.json"]
     records: self
   - schema: run-evidence.schema.json
     files: ["examples/run_evidence/*.packet.json"]
+    records: self
+  - schema: false-success-report.schema.json
+    files: ["reports/false_success.json"]
     records: self
