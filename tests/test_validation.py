@@ -15,6 +15,7 @@ VALID_FIXTURES = [
     ("report", ROOT / "tests" / "fixtures" / "valid" / "run_report.json"),
     ("evidence", ROOT / "tests" / "fixtures" / "valid" / "run_evidence.json"),
     ("reliability", ROOT / "tests" / "fixtures" / "valid" / "reliability_report.json"),
+    ("false-success", ROOT / "tests" / "fixtures" / "valid" / "false_success_report.json"),
 ]
 
 INVALID_FIXTURES = [
@@ -23,6 +24,7 @@ INVALID_FIXTURES = [
     ("report", ROOT / "tests" / "fixtures" / "invalid" / "run_report_bad_count.json"),
     ("evidence", ROOT / "tests" / "fixtures" / "invalid" / "run_evidence_missing_refs.json"),
     ("reliability", ROOT / "tests" / "fixtures" / "invalid" / "reliability_report_bad_rate.json"),
+    ("false-success", ROOT / "tests" / "fixtures" / "invalid" / "false_success_report_bad_class.json"),
 ]
 
 

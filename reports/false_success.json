@@ -1,0 +1,151 @@
+{
+  "rules": {
+    "completion_phrases": [
+      "task complete",
+      "task completed",
+      "task is complete",
+      "completed successfully",
+      "successfully completed",
+      "finished successfully",
+      "all tests pass",
+      "all done",
+      "i have completed",
+      "has been completed"
+    ],
+    "error_statuses": [
+      "error",
+      "failed"
+    ],
+    "success_statuses": [
+      "success",
+      "succeeded",
+      "completed"
+    ],
+    "write_tools": {
+      "source": "default_verbs",
+      "values": [
+        "write",
+        "create",
+        "update",
+        "delete",
+        "remove",
+        "insert",
+        "send",
+        "post",
+        "put",
+        "patch",
+        "commit",
+        "push",
+        "deploy",
+        "save",
+        "upload",
+        "edit"
+      ]
+    }
+  },
+  "summary": {
+    "flagged_traces": 2,
+    "ignored": 1,
+    "proceeded_as_success": 1,
+    "repaired": 1,
+    "success_without_effect": 1,
+    "tool_calls": 8,
+    "tool_errors": 3,
+    "traces": 4
+  },
+  "traces": [
+    {
+      "effects": 0,
+      "effects_recorded": true,
+      "flags": [],
+      "source": "examples/false_success/ignored.json",
+      "success_claim": {
+        "claimed": false,
+        "rules": []
+      },
+      "tool_calls": 1,
+      "tool_errors": [
+        {
+          "class": "ignored",
+          "error_rule": "is_error",
+          "index": 0,
+          "repaired_by": null,
+          "tool": "search_docs"
+        }
+      ],
+      "trace_id": "fs_ignored_search",
+      "write_calls": 0
+    },
+    {
+      "effects": 0,
+      "effects_recorded": false,
+      "flags": [
+        "proceeded_as_success"
+      ],
+      "source": "examples/false_success/proceeded_as_success.json",
+      "success_claim": {
+        "claimed": true,
+        "rules": [
+          "terminal_state.status=success",
+          "output_phrase:all tests pass"
+        ]
+      },
+      "tool_calls": 2,
+      "tool_errors": [
+        {
+          "class": "proceeded_as_success",
+          "error_rule": "status=failed",
+          "index": 1,
+          "repaired_by": null,
+          "tool": "run_tests"
+        }
+      ],
+      "trace_id": "fs_proceeded_tests",
+      "write_calls": 0
+    },
+    {
+      "effects": 1,
+      "effects_recorded": true,
+      "flags": [],
+      "source": "examples/false_success/repaired.json",
+      "success_claim": {
+        "claimed": true,
+        "rules": [
+          "terminal_state.status=success",
+          "output_phrase:task complete"
+        ]
+      },
+      "tool_calls": 3,
+      "tool_errors": [
+        {
+          "class": "repaired",
+          "error_rule": "status=error",
+          "index": 1,
+          "repaired_by": 2,
+          "tool": "write_file"
+        }
+      ],
+      "trace_id": "fs_repaired_write",
+      "write_calls": 2
+    },
+    {
+      "effects": 0,
+      "effects_recorded": true,
+      "flags": [
+        "success_without_effect"
+      ],
+      "source": "examples/false_success/success_without_effect.json",
+      "success_claim": {
+        "claimed": true,
+        "rules": [
+          "terminal_state.status=success",
+          "output_phrase:task complete"
+        ]
+      },
+      "tool_calls": 2,
+      "tool_errors": [],
+      "trace_id": "fs_no_effect_ticket",
+      "write_calls": 1
+    }
+  ]
+}

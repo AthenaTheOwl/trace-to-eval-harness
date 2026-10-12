@@ -216,6 +216,15 @@ The CLI must aggregate two or more ordered run reports into case-level pass@1,
 pass@k, pass^k, stability, and missing-attempt measures. A missing case occupies
 its attempt slot and counts as a failed attempt.
 
+### R-TTE-029: False-success audit
+
+The CLI must classify every tool error in a set of traces as repaired, ignored,
+or proceeded_as_success, using the trace's `terminal_state.status` and a listed
+completion-phrase set as the only success-claim rules. It must separately flag a
+success claim that made a write-tool call and recorded an empty `effects` list.
+The report names the rule that fired for each classification, and
+`--fail-on-flag` exits 1 when any trace is flagged.
+
 ### R-TTE-SCHEMA-001: Published schemas
 
 The repo must publish JSON Schemas for trace, eval case, and run report shapes under `schemas/`.
@@ -241,3 +250,9 @@ include positive and negative fixtures for validation.
 
 The repo must publish and validate a versioned JSON Schema for repeated-run
 reliability reports, with positive and negative fixtures.
+
+### R-TTE-SCHEMA-007: False-success report schema
+
+The repo must publish and validate a versioned JSON Schema for false-success
+audit reports, with positive and negative fixtures, and the committed report
+must conform to it under `scripts/validate_data_conformance.py`.

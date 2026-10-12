@@ -1,0 +1,11 @@
+{
+  "trace_id": "fs_no_effect_ticket",
+  "input": "Mark ticket T-1042 as resolved.",
+  "output": "Ticket T-1042 has been marked resolved. Task complete.",
+  "tool_calls": [
+    {"name": "lookup_ticket", "arguments": {"id": "T-1042"}, "status": "ok"},
+    {"name": "update_ticket", "arguments": {"id": "T-1042", "status": "resolved", "dry_run": true}, "status": "ok"}
+  ],
+  "terminal_state": {"status": "success"},
+  "effects": []
+}

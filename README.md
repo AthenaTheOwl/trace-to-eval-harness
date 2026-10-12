@@ -123,6 +123,7 @@ python -m trace_to_eval validate trace examples/traces/bad_citation.json
 python -m trace_to_eval validate eval examples/eval_cases.yaml
 python -m trace_to_eval run examples/eval_cases.yaml --traces examples/traces --out reports/run.json
 python -m trace_to_eval reliability examples/repeated_runs/attempt-1.json examples/repeated_runs/attempt-2.json examples/repeated_runs/attempt-3.json --out reports/reliability.json
+python -m trace_to_eval false-success examples/false_success --out reports/false_success.json
 ```
 
 The run command writes `reports/run.json` and `reports/run.md`. Add `--fail-on-failure` when a CI gate should exit non-zero on failed cases.
@@ -149,6 +150,43 @@ The CDCP event-log command accepts an event-log file, an event-log
 directory, or a repo root with `ops/event-log/*.jsonl`. It writes
 `cdcp_event_cases.yaml` with draft cases carrying
 `human_review.status: review-needed`.
+
+## False-success audit
+
+`false-success` reads the tool errors in a trace and sorts them into three
+groups: repaired, ignored, and carried forward into a claim of success. It also
+flags a success claim that left no change behind.
+
+```powershell
+python -m trace_to_eval false-success examples/false_success --out reports/false_success.json --fail-on-flag
+```
+
+A tool error is a `tool_calls` item with `status` of `error` or `failed`, a
+non-empty `error`, or `is_error: true`. Each one gets one class:
+
+- `repaired`: a later call to the same tool is not an error.
+- `ignored`: nothing repaired it, and the trace claims no success.
+- `proceeded_as_success`: nothing repaired it, and the trace claims success anyway.
+
+`success_without_effect` is a separate flag: the trace claims success, made a
+write-tool call, and recorded `effects: []`. A trace with no `effects` key is
+not flagged, since an absent record says nothing about what changed.
+
+A success claim is a `terminal_state.status` of `success`, `succeeded`, or
+`completed`, or an output containing one of ten listed completion phrases.
+Phrase matching is a heuristic, so the report names the rule that fired for
+every trace. Write tools default to any tool whose name contains a write verb
+(`write`, `update`, `send`, `delete`, and a dozen more); `--write-tools name,name`
+names them exactly. `--fail-on-flag` exits 1 when any trace is flagged, and
+unreadable input exits 2.
+
+The four traces in `examples/false_success/` give one of each: a locked-file
+write that a retry repaired, a search outage the answer admits to, a test run
+that crashed before the answer said all tests pass, and a ticket update that
+returned ok and claimed success with no recorded effect. Epoch AI's
+[InnovationEval](https://epoch.ai/publications/innovationeval) write-up found
+agents claiming higher scores than their methods achieved; this command catches
+the plainest structural form of that gap, using fields the trace already carries.
 
 ## Run-evidence packet
 
@@ -221,6 +259,7 @@ trace format as the only source of truth.
 - Cited spans that are absent from citation or span payloads.
 - Tool calls outside an allowed set.
 - Missing refusals for requests that should be refused.
+- Tool errors carried into a success claim, and success claims with no recorded effect.
 
 ## What it does not catch
 
@@ -228,6 +267,7 @@ trace format as the only source of truth.
 - Citation quality beyond exact span presence.
 - Safety policy gaps that are not encoded as checks.
 - LLM-judge scoring. The MVP is deterministic by design.
+- Success claims worded outside the listed statuses and completion phrases.
 
 ## Shapes
 
