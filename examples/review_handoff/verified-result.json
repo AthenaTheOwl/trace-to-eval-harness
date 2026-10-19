@@ -1,0 +1,8 @@
+{
+  "trace_id": "handoff_verified_result",
+  "input": "Save the reviewed migration guide and verify the saved result.",
+  "output": "Saved the guide and verified the recorded file change. Task complete.",
+  "tool_calls": [{"name": "write_file", "status": "ok"}, {"name": "read_file", "status": "ok"}],
+  "terminal_state": {"status": "success"},
+  "effects": [{"kind": "file.created", "path": "docs/migration.md"}]
+}
