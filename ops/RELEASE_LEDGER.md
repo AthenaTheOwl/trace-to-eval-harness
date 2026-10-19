@@ -21,10 +21,15 @@ date, SHA, title, scope, and proof refs.
   verification, a claimed write without recorded effects, and a clean result.
   Exercise the false-success behavior already present on published main.
 - proof:
-  - pytest — full fresh-main suite and the three-trace classification regression
-  - validate trace — all three handoff traces pass the current trace schema
-  - false-success --fail-on-flag — exits 1 with two flagged traces, as expected
-  - native governance and conformance gates — pass for the scoped source above
+  - pytest — `tests/test_false_success.py::test_review_handoff_examples_check_claims_against_recorded_evidence`,
+    `.github/workflows/ci.yml`
+  - validate_data_conformance — `schemas/conformance.yaml` (trace mapping for
+    `examples/review_handoff/*.json`), `.github/workflows/ci.yml`
+  - false-success --fail-on-flag — `examples/review_handoff/README.md`
+  - voice_lint, validate_sensitive_disclosures, check_no_bom, spec_check,
+    validate_schemas, validate_decisions, validate_roles, validate_tools,
+    validate_policies, validate_skills, validate_dreams,
+    check_schema_cache_freshness — `.github/workflows/ci.yml`
 
 ## 2026-05-25 — pre-CDCP init Trace-To-Eval Package MVP
 
