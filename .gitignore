@@ -7,3 +7,5 @@ __pycache__/
 .coverage
 ops/audit-log.jsonl
 
+reports/handoff_audit.json
+reports/handoff_audit.md
