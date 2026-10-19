@@ -1,0 +1,8 @@
+{
+  "trace_id": "handoff_no_observed_write",
+  "input": "Save the reviewed migration guide.",
+  "output": "The migration guide has been completed.",
+  "tool_calls": [{"name": "write_file", "status": "ok"}],
+  "terminal_state": {"status": "success"},
+  "effects": []
+}

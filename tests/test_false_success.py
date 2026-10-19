@@ -40,6 +40,17 @@ def test_examples_cover_each_class_once(monkeypatch) -> None:
     assert summary["flagged_traces"] == 2
 
 
+def test_review_handoff_examples_check_claims_against_recorded_evidence() -> None:
+    payload = audit_paths([ROOT / "examples" / "review_handoff"])
+    flags = {t["trace_id"]: t["flags"] for t in payload["traces"]}
+    assert flags == {
+        "handoff_claimed_tests": ["proceeded_as_success"],
+        "handoff_no_observed_write": ["success_without_effect"],
+        "handoff_verified_result": [],
+    }
+    assert payload["summary"]["flagged_traces"] == 2
+
+
 def test_committed_report_matches_examples(monkeypatch) -> None:
     monkeypatch.chdir(ROOT)
     committed = json.loads((ROOT / "reports" / "false_success.json").read_text(encoding="utf-8"))

@@ -153,6 +153,11 @@ directory, or a repo root with `ops/event-log/*.jsonl`. It writes
 
 ## False-success audit
 
+The [review handoff exercise](examples/review_handoff/README.md) adds three
+synthetic author/reviewer traces: failed verification carried into a completion
+claim, a claimed write with no recorded effect, and a clean recorded result. It
+shows how to check a specialist's handoff without accepting its summary as proof.
+
 `false-success` reads the tool errors in a trace and sorts them into three
 groups: repaired, ignored, and carried forward into a claim of success. It also
 flags a success claim that left no change behind.
