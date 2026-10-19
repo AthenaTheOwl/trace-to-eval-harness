@@ -15,6 +15,17 @@ date, SHA, title, scope, and proof refs.
 
 ## Entries
 
+## 2026-10-18 — 3c1b3791fec72371317363b7471fee4b00253987 review handoff evidence exercise
+
+- scope: Add three synthetic handoff traces and a reviewer exercise for failed
+  verification, a claimed write without recorded effects, and a clean result.
+  Exercise the false-success behavior already present on published main.
+- proof:
+  - pytest — full fresh-main suite and the three-trace classification regression
+  - validate trace — all three handoff traces pass the current trace schema
+  - false-success --fail-on-flag — exits 1 with two flagged traces, as expected
+  - native governance and conformance gates — pass for the scoped source above
+
 ## 2026-05-25 — pre-CDCP init Trace-To-Eval Package MVP
 
 - scope: Initial MVP commit. Turn failed traces into deterministic regression cases.
